@@ -1,0 +1,26 @@
+{
+    "default": {
+        "date_column": "Date",
+        "amount_column": "Amount",
+        "description_column": "Description",
+        "date_format": "%Y-%m-%d",
+        "amount_multiplier": 1,
+        "header_row": 0
+    },
+    "chase": {
+        "date_column": "Transaction Date",
+        "amount_column": "Amount",
+        "description_column": "Description",
+        "date_format": "%m/%d/%Y",
+        "amount_multiplier": 1,
+        "header_row": 0
+    },
+    "bank_of_america": {
+        "date_column": "Posted Date",
+        "amount_column": "Amount",
+        "description_column": "Payee",
+        "date_format": "%m/%d/%Y",
+        "amount_multiplier": 1,
+        "header_row": 0
+    }
+} 
