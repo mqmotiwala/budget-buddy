@@ -1,0 +1,45 @@
+# .github/workflows/deploy-lambda.yml
+name: Deploy Lambda Parse Statement
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'lambdas/parse_statement/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies and deploy
+        run: |
+          cd lambdas/parse_statement
+          echo "📦 Packaging parse_statement..."
+
+          rm -f function.zip
+          rm -rf package
+
+          if [ -s requirements.txt ]; then
+            mkdir -p package
+            pip install --target ./package -r requirements.txt
+            cd package
+            zip -r9 ../function.zip .
+            cd ..
+          else
+            touch function.zip
+          fi
+
+          zip -g function.zip handler.py
+          zip -r function.zip parsers/
+
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: us-west-2
