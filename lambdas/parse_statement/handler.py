@@ -38,3 +38,4 @@ def lambda_handler(event, context):
             Key=output_key,
             Body=clean.to_csv(index=False).encode('utf-8')
         )
+    
