@@ -33,7 +33,7 @@ jobs:
             zip -r9 ../function.zip .
             cd ..
           else
-            touch function.zip
+            zip function.zip handler.py
           fi
 
           zip -g function.zip handler.py
