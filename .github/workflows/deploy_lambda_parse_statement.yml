@@ -34,10 +34,10 @@ jobs:
             zip -r9 ../function.zip .
             cd ..
           else
-            zip function.zip handler.py
+            zip function.zip lambda_function.py
           fi
 
-          zip -g function.zip handler.py
+          zip -g function.zip lambda_function.py
           zip -r function.zip parsers/
 
           echo "Deploying to AWS Lambda..."
