@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies and deploy
         run: |
           cd lambdas/parse_statement
-          echo "📦 Packaging parse_statement..."
+          echo "Packaging parse_statement..."
 
           rm -f function.zip
           rm -rf package
@@ -38,6 +38,11 @@ jobs:
 
           zip -g function.zip handler.py
           zip -r function.zip parsers/
+
+          echo "Deploying to AWS Lambda..."
+          aws lambda update-function-code \
+            --function-name parse_statement \
+            --zip-file fileb://function.zip
 
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
