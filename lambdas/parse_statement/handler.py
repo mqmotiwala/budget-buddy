@@ -27,11 +27,14 @@ def lambda_handler(event, context):
         obj = s3.get_object(Bucket=bucket, Key=key)
         raw = pd.read_csv(obj['Body'])
 
-        clean = parser(raw)
-        clean["statement_issuer"] = issuer.lower()
+        # clean = parser(raw)
+        # clean["statement_issuer"] = issuer.lower()
 
-        filename = key.split("/")[-1]
-        output_key = f"to_review/{issuer.lower()}/{filename}"
+        # filename = key.split("/")[-1]
+        # output_key = f"to_review/{issuer.lower()}/{filename}"
+
+        clean = raw
+        clean["statement_issuer"] = issuer.lower()
 
         s3.put_object(
             Bucket=bucket,
