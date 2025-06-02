@@ -2,7 +2,6 @@
 
 import streamlit as st
 import boto3
-import os
 import pandas as pd
 import traceback
 from categories import CATEGORIES
@@ -36,6 +35,11 @@ try:
     buffer = BytesIO(raw)
 
     data = pd.read_parquet(buffer)
+    data = data.sort_values(by="transaction_date", ascending=True)
+
+    show_all = st.checkbox("Show all expenses", value=False)
+    if not show_all:
+        data = data[data[CATEGORY_COLUMN].isnull() | (data[CATEGORY_COLUMN] == "")]
 
     edited = st.data_editor(
         data,
