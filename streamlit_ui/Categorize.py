@@ -4,41 +4,63 @@ import streamlit as st
 import boto3
 import os
 import pandas as pd
+import traceback
+from categories import CATEGORIES
+from io import BytesIO
 
-from utils.categorize import (
-    load_master_dataframe,
-    save_updated_dataframe,
-    render_categorization_ui,
-    add_category_column_if_missing
-)
+# AWS secrets
+AWS_ACCESS_KEY_ID = st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
+AWS_REGION = st.secrets["aws"]["AWS_REGION"]
 
-st.set_page_config(page_title="Categorize Expenses", layout="wide")
-st.title("📂 Categorize Expenses")
+S3_BUCKET = "aws-budget-buddy"
+MASTER_KEY = "categorized_expenses.parquet"
 
-# Load AWS credentials from Streamlit secrets
-aws_access_key = st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
-aws_secret_key = st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
-aws_region = st.secrets["aws"]["AWS_REGION"]
+CATEGORY_COLUMN = "category"
 
-bucket = "aws-budget-buddy"
-key = "cleaned/master/master.csv"
-
-# Initialize S3 client
 s3 = boto3.client(
     "s3",
-    aws_access_key_id=aws_access_key,
-    aws_secret_access_key=aws_secret_key,
-    region_name=aws_region
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    region_name=AWS_REGION
 )
 
-# Load and render editable dataframe
-try:
-    df = load_master_dataframe(s3, bucket, key)
-    df = add_category_column_if_missing(df)
-    edited_df = render_categorization_ui(df)
+# ─── Streamlit Page UI ────────────────────────────────────────────────────────────────
 
-    if st.button("💾 Save Categorized Data"):
-        save_updated_dataframe(s3, edited_df, bucket, key)
+st.set_page_config(page_title="Categorize Expenses", layout="wide")
+st.title("Categorize Expenses")
+
+try:
+    response = s3.get_object(Bucket=S3_BUCKET, Key=MASTER_KEY)
+    raw = response["Body"].read()
+    buffer = BytesIO(raw)
+
+    data = pd.read_parquet(buffer)
+
+    edited = st.data_editor(
+        data,
+        use_container_width=True,
+        num_rows="dynamic",
+
+        # configure CATEGORY_COLUMN as a dropdown selector
+        column_config={CATEGORY_COLUMN: st.column_config.SelectboxColumn(options=CATEGORIES)}
+    )
+
+    if st.button("💾 Save Changes"):
+        # Save to Parquet in memory
+        out_buffer = BytesIO()
+        edited.to_parquet(out_buffer, index=False, compression='snappy')
+
+        # Upload updated master file
+        s3.put_object(
+            Bucket=S3_BUCKET,
+            Key=MASTER_KEY,
+            Body=out_buffer.getvalue()
+        )
+        
         st.success("Categorized data saved back to S3.")
+
 except Exception as e:
     st.error(f"Failed to load or process data: {e}")
+    st.text("Detailed traceback:")
+    st.code(traceback.format_exc())
