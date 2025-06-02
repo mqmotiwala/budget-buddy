@@ -24,8 +24,8 @@ def lambda_handler(event, context):
         bucket = record['s3']['bucket']['name']
         key = record['s3']['object']['key']
 
-        # the S3 trigger rules for this lambda will explicitly exclude master.csv
-        # so this check is just a safety measure
+        # if master.csv is updated, it will trigger this lambda again
+        # this prevents recursive self-triggering
         if key == MASTER_KEY:
             logger.info("Skipping master.csv to avoid self-trigger.")
             continue

@@ -45,7 +45,7 @@ def lambda_handler(event, context):
                 # set output key based on issuer and date range
                 min_date = clean["transaction_date"].dropna().min().date().strftime("%Y-%m-%d")
                 max_date = clean["transaction_date"].dropna().max().date().strftime("%Y-%m-%d")
-                output_key = f"cleaned/{issuer.lower()} activity from {min_date} to {max_date}.csv"
+                output_key = f"cleaned/{issuer.lower()}_activity_from_{min_date}_to_{max_date}.csv"
                 logger.info(f"Uploading cleaned file to: {output_key}")
                 
                 s3.put_object(
