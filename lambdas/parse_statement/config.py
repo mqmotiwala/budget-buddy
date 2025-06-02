@@ -9,7 +9,7 @@ Required keys for each issuer include:
 
 ISSUER_CONFIG = {
     "amex": {
-        "DATE_COLUMN": "Transaction Date",
+        "DATE_COLUMN": "Date",
         "DESCRIPTION_COLUMN": "Description",
         "AMOUNT_COLUMN": "Amount",
         "EXPENSES_SIGN": -1  # Amex statements have expenses as positive amounts
