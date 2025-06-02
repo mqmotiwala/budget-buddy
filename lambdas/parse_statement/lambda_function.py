@@ -3,20 +3,17 @@ import pandas as pd
 import os
 import logging
 
-from parsers import chase, amex
+from config import ISSUER_CONFIG
+from parser import parse
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-ISSUER_PARSERS = {
-    "chase": chase.parse,
-    "amex": amex.parse,
-}
-
 s3 = boto3.client('s3')
 
 def lambda_handler(event, context):
-    logger.info(f"Lambda triggered with event: {event}")
+    logger.info(f"Lambda triggered with event: ")
+    logger.info(event)
 
     for record in event['Records']:
         bucket = record['s3']['bucket']['name']
@@ -28,9 +25,7 @@ def lambda_handler(event, context):
             # extract issuer from key path
             # expected format: statements/<issuer>/file.csv
             issuer = key.split("/")[1]
-            parser = ISSUER_PARSERS.get(issuer.lower())
-
-            if not parser:
+            if not ISSUER_CONFIG.get(issuer):
                 raise ValueError(f"issuer {issuer} in key: {key} is unsupported/unrecognized")
 
             obj = s3.get_object(Bucket=bucket, Key=key)
@@ -38,7 +33,7 @@ def lambda_handler(event, context):
 
             logger.info(f"Read {len(raw)} rows from raw CSV")
 
-            clean = parser(raw)
+            clean = parse(raw, ISSUER_CONFIG[issuer])
             clean["statement_issuer"] = issuer.lower()
 
             filename = key.split("/")[-1]
