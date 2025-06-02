@@ -27,23 +27,26 @@ jobs:
           rm -f function.zip
           rm -rf package
 
+          # Step 1: Always start by zipping source files
+          zip function.zip lambda_function.py parser.py config.py
+
+          # Step 2: Append dependencies if present
           if [ -s requirements.txt ]; then
+            echo "Installing dependencies..."
             mkdir -p package
             pip install --target ./package -r requirements.txt
             cd package
             zip -r9 ../function.zip .
             cd ..
-          else
-            zip function.zip lambda_function.py
           fi
 
-          zip -g function.zip lambda_function.py
-          zip -r function.zip parsers/
-
+          # Step 3: Deploy
           echo "Deploying to AWS Lambda..."
           aws lambda update-function-code \
             --function-name parse_statement \
             --zip-file fileb://function.zip
+
+          echo "Deployment complete."
 
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
