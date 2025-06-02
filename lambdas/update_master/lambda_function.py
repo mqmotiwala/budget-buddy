@@ -7,8 +7,9 @@ import boto3
 import pandas as pd
 import logging
 
-from botocore.exceptions import ClientError
+from io import BytesIO
 from urllib.parse import unquote_plus
+from botocore.exceptions import ClientError
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -16,7 +17,7 @@ logger.setLevel(logging.INFO)
 s3 = boto3.client('s3')
 
 BUCKET = 'aws-budget-buddy'
-MASTER_KEY = 'categorized_expenses.csv'
+MASTER_KEY = 'categorized_expenses.parquet'
 
 def lambda_handler(event, context):
     logger.info("Lambda triggered with event:")
@@ -33,32 +34,39 @@ def lambda_handler(event, context):
             new_data = pd.read_csv(obj['Body'])
             logger.info(f"Read {len(new_data)} rows from new CSV")
 
-            # read master file
-            # if master does not exist, start with an empty DataFrame
+            # Load master file (if it exists)
             try:
                 master_obj = s3.get_object(Bucket=BUCKET, Key=MASTER_KEY)
-                master_df = pd.read_csv(master_obj['Body'])
+                master_body = BytesIO(master_obj['Body'].read())
+                master_df = pd.read_parquet(master_body)
                 logger.info(f"Read {len(master_df)} rows from master file")
 
             except ClientError as e:
                 if e.response['Error']['Code'] == 'NoSuchKey':
-                    logger.warning("master file not found. Starting fresh.")
+                    logger.warning("Master file not found. Starting fresh.")
                     master_df = pd.DataFrame(columns=new_data.columns)
                 else:
                     raise
 
-            # combine and drop exact duplicates
+            # Merge and deduplicate
+            # we ignore columns that are not in both dataframes, handling categorized expenses gracefully
             combined = pd.concat([master_df, new_data], ignore_index=True)
+            deduplication_cols = [col for col in new_data.columns if col in combined.columns]
             before = len(combined)
-            combined = combined.drop_duplicates()
+            combined = combined.drop_duplicates(subset=deduplication_cols)
             after = len(combined)
             logger.info(f"Dropped {before - after} duplicate rows. Final row count: {after}")
 
-            # update master
+
+            # Save to Parquet in memory
+            out_buffer = BytesIO()
+            combined.to_parquet(out_buffer, index=False)
+
+            # Upload updated master file
             s3.put_object(
-                Bucket=BUCKET, 
-                Key=MASTER_KEY, 
-                Body=combined.to_csv(index=False).encode('utf-8')
+                Bucket=BUCKET,
+                Key=MASTER_KEY,
+                Body=out_buffer.getvalue()
             )
 
             logger.info(f"Successfully updated master file at {MASTER_KEY}")
