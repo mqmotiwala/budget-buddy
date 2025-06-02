@@ -1,53 +1,55 @@
-# .github/workflows/deploy-lambda.yml
-name: Deploy Lambda Parse Statement
+name: Deploy All Lambda Functions
 
 on:
   push:
     branches: [main]
     paths:
-      - 'lambdas/parse_statement/**'
+      - 'lambdas/**'
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install dependencies and deploy
+      - name: Deploy all Lambda functions
         run: |
-          cd lambdas/parse_statement
-          echo "Packaging parse_statement..."
+          for fn_dir in lambdas/*; do
+            if [ -d "$fn_dir" ]; then
+              fn_name=$(basename "$fn_dir")
+              echo "Deploying $fn_name..."
 
-          rm -f function.zip
-          rm -rf package
+              cd "$fn_dir"
+              rm -f function.zip
+              rm -rf package
 
-          # Step 1: Always start by zipping source files
-          zip function.zip lambda_function.py parser.py config.py
+              # Step 1: Zip source files
+              zip function.zip *.py
 
-          # Step 2: Append dependencies if present
-          if [ -s requirements.txt ]; then
-            echo "Installing dependencies..."
-            mkdir -p package
-            pip install --target ./package -r requirements.txt
-            cd package
-            zip -r9 ../function.zip .
-            cd ..
-          fi
+              # Step 2: Include dependencies if requirements.txt exists and is non-empty
+              if [ -s requirements.txt ]; then
+                mkdir -p package
+                pip install -r requirements.txt --target package
+                cd package
+                zip -r9 ../function.zip .
+                cd ..
+              fi
 
-          # Step 3: Deploy
-          echo "Deploying to AWS Lambda..."
-          aws lambda update-function-code \
-            --function-name parse_statement \
-            --zip-file fileb://function.zip
+              # Step 3: Deploy to AWS Lambda
+              aws lambda update-function-code \
+                --function-name "$fn_name" \
+                --zip-file fileb://function.zip
 
-          echo "Deployment complete."
-
+              echo "$fn_name deployed."
+              cd ../../
+            fi
+          done
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
