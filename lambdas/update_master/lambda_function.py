@@ -31,7 +31,17 @@ def lambda_handler(event, context):
 
         try:
             obj = s3.get_object(Bucket=bucket, Key=key)
-            new_data = pd.read_csv(obj['Body'])
+            new_data = pd.read_csv(
+                obj['Body'],
+                dtype={
+                    'description': 'str',
+                    'amount': 'float64',
+                    'statement_issuer': 'str'
+                },
+                parse_dates=['transaction_date'],
+                infer_datetime_format=True
+            )
+
             logger.info(f"Read {len(new_data)} rows from new CSV")
 
             # Load master file (if it exists)
@@ -57,10 +67,9 @@ def lambda_handler(event, context):
             after = len(combined)
             logger.info(f"Dropped {before - after} duplicate rows. Final row count: {after}")
 
-
             # Save to Parquet in memory
             out_buffer = BytesIO()
-            combined.to_parquet(out_buffer, index=False)
+            combined.to_parquet(out_buffer, index=False, compression='snappy')
 
             # Upload updated master file
             s3.put_object(
