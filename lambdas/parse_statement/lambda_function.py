@@ -10,6 +10,7 @@ import logging
 
 from config import ISSUER_CONFIG
 from parser import parse
+from urllib.parse import unquote_plus
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -22,7 +23,7 @@ def lambda_handler(event, context):
 
     for record in event['Records']:
         bucket = record['s3']['bucket']['name']
-        key = record['s3']['object']['key']
+        key = unquote_plus(record['s3']['object']['key'])
 
         logger.info(f"Processing file from bucket: {bucket}, key: {key}")
 
@@ -45,7 +46,7 @@ def lambda_handler(event, context):
                 # set output key based on issuer and date range
                 min_date = clean["transaction_date"].dropna().min().date().strftime("%Y-%m-%d")
                 max_date = clean["transaction_date"].dropna().max().date().strftime("%Y-%m-%d")
-                output_key = f"cleaned/{issuer.lower()}_activity_from_{min_date}_to_{max_date}.csv"
+                output_key = f"cleaned/{issuer.lower()} activity from {min_date} to {max_date}.csv"
                 logger.info(f"Uploading cleaned file to: {output_key}")
                 
                 s3.put_object(

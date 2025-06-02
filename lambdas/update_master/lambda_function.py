@@ -6,7 +6,9 @@ This function is triggered by S3 events when new cleaned files are uploaded.
 import boto3
 import pandas as pd
 import logging
+
 from botocore.exceptions import ClientError
+from urllib.parse import unquote_plus
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -22,7 +24,7 @@ def lambda_handler(event, context):
 
     for record in event['Records']:
         bucket = record['s3']['bucket']['name']
-        key = record['s3']['object']['key']
+        key = unquote_plus(record['s3']['object']['key'])
 
         # if master.csv is updated, it will trigger this lambda again
         # this prevents recursive self-triggering
