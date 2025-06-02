@@ -36,7 +36,9 @@ def lambda_handler(event, context):
                 dtype={
                     'description': 'str',
                     'amount': 'float64',
-                    'statement_issuer': 'str'
+                    'statement_issuer': 'str',
+                    'category': 'str',
+                    'notes': 'str'
                 },
                 parse_dates=['transaction_date'],
                 infer_datetime_format=True
