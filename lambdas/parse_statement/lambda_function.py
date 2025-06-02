@@ -1,3 +1,8 @@
+"""
+Parse and clean financial statement CSV files uploaded to S3.
+This Lambda function is triggered by S3 events when new files are uploaded to the 'statements' folder.
+"""
+
 import boto3
 import pandas as pd
 import os
