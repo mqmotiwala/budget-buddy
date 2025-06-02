@@ -58,6 +58,12 @@ def lambda_handler(event, context):
                 else:
                     raise
 
+            # include required columns in master schema
+            # handles cases where master is empty or missing 
+            for col in ['category', 'notes']:
+                if col not in master_df.columns:
+                    master_df[col] = pd.NA
+
             # Merge and deduplicate
             # we ignore columns that are not in both dataframes, handling categorized expenses gracefully
             combined = pd.concat([master_df, new_data], ignore_index=True)
