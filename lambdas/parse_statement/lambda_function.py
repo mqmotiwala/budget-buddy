@@ -36,16 +36,21 @@ def lambda_handler(event, context):
             clean = parse(raw, ISSUER_CONFIG[issuer])
             clean["statement_issuer"] = issuer.lower()
 
-            filename = key.split("/")[-1]
-            output_key = f"to_review/{issuer.lower()}/{filename}"
+            if not clean.empty:
+                # set output key based on issuer and date range
+                min_date = clean["transaction_date"].dropna().min().date().strftime("%Y-%m-%d")
+                max_date = clean["transaction_date"].dropna().max().date().strftime("%Y-%m-%d")
+                output_key = f"cleaned/{issuer.lower()} activity from {min_date} to {max_date}.csv"
+                logger.info(f"Uploading cleaned file to: {output_key}")
+                
+                s3.put_object(
+                    Bucket=bucket,
+                    Key=output_key,
+                    Body=clean.to_csv(index=False).encode('utf-8')
+                )
 
-            logger.info(f"Uploading cleaned file to: {output_key}")
-            
-            s3.put_object(
-                Bucket=bucket,
-                Key=output_key,
-                Body=clean.to_csv(index=False).encode('utf-8')
-            )
+            else:
+                logger.warning(f"file {key} for issuer {issuer} is empty after parsing. No output generated.")
             
         except Exception as e:
             logger.exception(f"Failed to process file {key}: {e}")
