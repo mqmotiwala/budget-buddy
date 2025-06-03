@@ -5,11 +5,7 @@ import boto3
 import pandas as pd
 from io import BytesIO
 import altair as alt
-
-# AWS secrets
-AWS_ACCESS_KEY_ID = st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
-AWS_SECRET_ACCESS_KEY = st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
-AWS_REGION = st.secrets["aws"]["AWS_REGION"]
+from helpers.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
 
 S3_BUCKET = "aws-budget-buddy"
 AMOUNT_COLUMN = "amount"

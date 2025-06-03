@@ -4,13 +4,9 @@ import pandas as pd
 import streamlit as st
 from io import BytesIO
 from datetime import datetime, timezone
-from helpers.categories import CATEGORIES
+from helpers.config import CATEGORIES, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
+from helpers.helpers import check_lambda_completed
 from botocore.exceptions import ClientError
-
-# AWS secrets
-AWS_ACCESS_KEY_ID = st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
-AWS_SECRET_ACCESS_KEY = st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
-AWS_REGION = st.secrets["aws"]["AWS_REGION"]
 
 S3_BUCKET = "aws-budget-buddy"
 STATEMENTS_FOLDER = "statements"
@@ -39,21 +35,36 @@ st.text("Get started below!\nUse the sidebar to access the analytics page.")
 
 st.header("Upload Statements")
 
-issuer = st.selectbox("Select Issuer", existing_issuers, index=None)
-file = st.file_uploader("Upload CSV File", type=["csv"])
+issuer = st.selectbox("Select Issuer", existing_issuers, index=None, key="issuer_select")
+file = st.file_uploader("Upload CSV File", type=["csv"], key="file_uploader")
 
 if file and issuer:
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S")
-    s3_key = f"{STATEMENTS_FOLDER}/{issuer}/{issuer}_statement_{now}.csv"
+    if st.button("📤 Upload Statement"):
+        upload_time = datetime.now(timezone.utc)
+        formatted_time = upload_time.strftime("%Y-%m-%dT%H-%M-%S")
+        new_statement_key = f"{STATEMENTS_FOLDER}/{issuer}/{issuer}_statement_{formatted_time}.csv"
 
-    try:
-        s3.upload_fileobj(file, S3_BUCKET, s3_key)
-        st.success(f"✅ Uploaded to S3: `{s3_key}`")
+        with st.status("Uploading to S3...", expanded=True) as status:
+            try:
+                s3.upload_fileobj(file, S3_BUCKET, new_statement_key)
+                status.write("🟢 Uploaded to S3")
+            except Exception as e:
+                status.update(label="Upload failed", state="error")
+                st.error(f"🔴 Upload failed: {e}")
+                st.code(traceback.format_exc())
+                st.stop()
 
-    except Exception as e:
-        st.error(f"Failed to load or process data: {e}")
-        st.text("Detailed traceback:")
-        st.code(traceback.format_exc())
+            # Check Lambdas completed
+            for lambda_function in ["parse_statement", "update_master"]:
+                status.update(label=f"🟠 Waiting for `{lambda_function}` Lambda...")
+                if check_lambda_completed(f"/aws/lambda/{lambda_function}"):
+                    status.write(f"🟢 `{lambda_function}` completed")
+                else:
+                    status.update(label=f"{lambda_function}() timed out", state="error")
+                    st.warning(f"🔴 Could not confirm {lambda_function}() executed.")
+                    st.stop()
+            
+            status.update(label="done!", state="complete", expanded=False)
 
 # ─── Categorize Section ────────────────────────────────────────────────────
 
@@ -107,7 +118,7 @@ try:
 
 except ClientError as e:
     if e.response['Error']['Code'] == 'NoSuchKey':
-        st.text("No categorized expenses found. Start with uploading some statements.")
+        st.text("No categorized expenses found. Start by uploading some statements.")
     else:
         st.error(f"Failed to load or process data: {e}")
         st.text("Detailed traceback:")
