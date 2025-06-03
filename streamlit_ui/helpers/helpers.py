@@ -12,7 +12,7 @@ logs = boto3.client(
 
 LAMBDA_TIMEOUT = 30  # seconds
 POLL_INTERVAL = 1    # seconds
-SUCCESSFUL_CONFIRMATION_TEXT = "END RequestId"
+SUCCESSFUL_CONFIRMATION_TEXT = "SUCCESS" # Lambda functions log this explicitly
 
 def check_lambda_completed(log_group, confirmation_text=SUCCESSFUL_CONFIRMATION_TEXT, timeout=LAMBDA_TIMEOUT, poll_interval=POLL_INTERVAL):
     """
