@@ -75,7 +75,7 @@ try:
         data,
         use_container_width=True,
         num_rows="dynamic",
-
+        hide_index=True,
         # configure CATEGORY_COLUMN as a dropdown selector
         column_config={CATEGORY_COLUMN: st.column_config.SelectboxColumn(options=CATEGORIES)}
     )
