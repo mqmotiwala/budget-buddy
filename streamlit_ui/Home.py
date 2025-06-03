@@ -81,14 +81,15 @@ try:
     if not show_all:
         data = uncategorized
 
-    edited = st.data_editor(
-        data,
-        use_container_width=True,
-        num_rows="dynamic",
-        hide_index=True,
-        # configure CATEGORY_COLUMN as a dropdown selector
-        column_config={CATEGORY_COLUMN: st.column_config.SelectboxColumn(options=CATEGORIES)}
-    )
+    if show_all or not uncategorized.empty: 
+        edited = st.data_editor(
+            data,
+            use_container_width=True,
+            num_rows="dynamic",
+            hide_index=True,
+            # configure CATEGORY_COLUMN as a dropdown selector
+            column_config={CATEGORY_COLUMN: st.column_config.SelectboxColumn(options=CATEGORIES)}
+        )
 
     if st.button("💾 Save Changes"):
         # Save to Parquet in memory
