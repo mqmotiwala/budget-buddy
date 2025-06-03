@@ -60,13 +60,22 @@ if file and issuer:
             # Check Lambdas completed
             for lambda_function in ["parse_statement", "update_master"]:
                 status.update(label=f"🟠 Waiting for `{lambda_function}` Lambda function to complete...")
-                if check_lambda_completed(f"/aws/lambda/{lambda_function}", upload_ms):
-                    status.write(f"🟢 `{lambda_function}` completed")
-                else:
-                    status.update(label=f"{lambda_function}() timed out", state="error")
-                    st.warning(f"🔴 Could not confirm {lambda_function}() executed.")
+                res = check_lambda_completed(f"/aws/lambda/{lambda_function}", upload_ms)
+
+                if isinstance(res, list):
+                    # logs containing error msg detected
+                    st.error(f"🔴 `{lambda_function}` encountered errors:")
+                    for msg in res:
+                        st.code(msg, language="text")
                     st.stop()
-            
+                else:
+                    if res:
+                        status.write(f"🟢 `{lambda_function}` completed")
+                    else:
+                        status.update(label=f"{lambda_function}() timed out", state="error")
+                        st.warning(f"🔴 Could not verify {lambda_function} executed in time.")
+                        st.stop()
+                
             status.update(label="done!", state="complete", expanded=False)
 
 # ─── Categorize Section ────────────────────────────────────────────────────

@@ -73,6 +73,10 @@ def lambda_handler(event, context):
                     logger.warning("Master file not found. Starting fresh.")
                     master_df = pd.DataFrame(columns=new_data.columns)
                 else:
+                    # streamlit checks for this log to confirm execution failure
+                    logger.error("FAILURE")
+                    logger.exception(f"Unable to process file {key}: {e}")
+                    
                     raise
 
             # include required columns in master schema
@@ -107,5 +111,8 @@ def lambda_handler(event, context):
             logger.info("SUCCESS")
 
         except Exception as e:
-            logger.exception(f"Failed to process file {key}: {e}")
+            # streamlit checks for this log to confirm execution failure
+            logger.error("FAILURE")
+            logger.exception(f"Unable to process file {key}: {e}")
+
             raise

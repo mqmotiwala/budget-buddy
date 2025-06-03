@@ -62,5 +62,8 @@ def lambda_handler(event, context):
             logger.info("SUCCESS")
             
         except Exception as e:
-            logger.exception(f"Failed to process file {key}: {e}")
+            # streamlit checks for this log to confirm execution failure
+            logger.error("FAILURE")
+            logger.exception(f"Unable to process file {key}: {e}")
+            
             raise

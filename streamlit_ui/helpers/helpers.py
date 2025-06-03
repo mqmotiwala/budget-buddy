@@ -13,14 +13,26 @@ logs = boto3.client(
 
 LAMBDA_TIMEOUT = 30  # seconds
 POLL_INTERVAL = 1    # seconds
-SUCCESSFUL_CONFIRMATION_TEXT = "SUCCESS" # Lambda functions log this explicitly
 
-def check_lambda_completed(log_group, invocation_time, confirmation_text=SUCCESSFUL_CONFIRMATION_TEXT, timeout=LAMBDA_TIMEOUT, poll_interval=POLL_INTERVAL):
+# Lambda functions log these explicitly
+SUCCESSFUL_CONFIRMATION_TEXT = "SUCCESS"
+ERROR_CONFIRMATION_TEXT = "FAILURE" 
+
+def check_lambda_completed(log_group, invocation_time):
     """
-    Polls recent log streams in the given log group to confirm completion message.
+    Polls recent log streams in the given log group to detect Lambda execution result.
+
+    Args:
+        log_group (str): Name of the CloudWatch log group.
+        invocation_time (int): Epoch timestamp (in ms) of Lambda invocation to filter logs.
+
+    Returns:
+        True: if a successful confirmation message is found.
+        list[str]: log messages if an error confirmation is found.
+        False: if no confirmation is found before timeout.
     """
 
-    for _ in range(timeout // poll_interval):
+    for _ in range(LAMBDA_TIMEOUT // POLL_INTERVAL):
         try:
             streams = logs.describe_log_streams(
                 logGroupName=log_group,
@@ -37,8 +49,14 @@ def check_lambda_completed(log_group, invocation_time, confirmation_text=SUCCESS
                     startFromHead=False
                 ).get("events", [])
 
-                if any(confirmation_text in e["message"] for e in events if e["timestamp"] >= invocation_time):
+                valid_events = [e for e in events if e["timestamp"] >= invocation_time]
+                logged_messages = [e["message"] for e in valid_events]
+
+                if any(SUCCESSFUL_CONFIRMATION_TEXT in logged_messages):
                     return True
+                
+                elif any(ERROR_CONFIRMATION_TEXT in logged_messages):
+                    return logged_messages
         
         except Exception as e:
             st.warning(f"Log check failed: {e}")
@@ -47,6 +65,6 @@ def check_lambda_completed(log_group, invocation_time, confirmation_text=SUCCESS
             
             break
 
-        time.sleep(poll_interval)
+        time.sleep(POLL_INTERVAL)
     
     return False
