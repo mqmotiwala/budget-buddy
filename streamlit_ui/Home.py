@@ -5,6 +5,7 @@ import streamlit as st
 from io import BytesIO
 from datetime import datetime, timezone
 from helpers.categories import CATEGORIES
+from botocore.exceptions import ClientError
 
 # AWS secrets
 AWS_ACCESS_KEY_ID = st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
@@ -93,7 +94,10 @@ try:
         
         st.success("Categorized data synced to cloud.")
 
-except Exception as e:
-    st.error(f"Failed to load or process data: {e}")
-    st.text("Detailed traceback:")
-    st.code(traceback.format_exc())
+except ClientError as e:
+    if e.response['Error']['Code'] == 'NoSuchKey':
+        st.text("No categorized expenses found. Start with uploading some statements.")
+    else:
+        st.error(f"Failed to load or process data: {e}")
+        st.text("Detailed traceback:")
+        st.code(traceback.format_exc())
