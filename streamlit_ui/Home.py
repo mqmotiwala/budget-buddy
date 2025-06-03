@@ -39,7 +39,7 @@ st.text("Get started below!\nUse the sidebar to access the analytics page.")
 
 st.header("Upload Statements")
 
-issuer = st.selectbox("Select Issuer", existing_issuers)
+issuer = st.selectbox("Select Issuer", existing_issuers, index=None)
 file = st.file_uploader("Upload CSV File", type=["csv"])
 
 if file and issuer:
