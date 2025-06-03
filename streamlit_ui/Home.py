@@ -67,9 +67,19 @@ try:
     data = pd.read_parquet(buffer)
     data = data.sort_values(by="transaction_date", ascending=True)
 
-    show_all = st.checkbox("Show all expenses", value=False)
+    uncategorized = data[data[CATEGORY_COLUMN].isna() | (data[CATEGORY_COLUMN] == "")]
+
+    if uncategorized.empty:
+        st.text("Nice! all expenses are categorized.")
+        st.text("You can still edit existing categories below.")
+    else:
+        st.text(f"Found {len(uncategorized)} uncategorized expenses.")
+
+    # if there are uncategorized expenses, filter only for them
+    # otherwise show all expenses
+    show_all = st.checkbox("Show all expenses", value=uncategorized.empty)
     if not show_all:
-        data = data[data[CATEGORY_COLUMN].isnull() | (data[CATEGORY_COLUMN] == "")]
+        data = uncategorized
 
     edited = st.data_editor(
         data,
