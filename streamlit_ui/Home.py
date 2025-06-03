@@ -1,3 +1,4 @@
+import time 
 import boto3
 import traceback
 import pandas as pd
@@ -40,8 +41,10 @@ file = st.file_uploader("Upload CSV File", type=["csv"], key="file_uploader")
 
 if file and issuer:
     if st.button("📤 Upload Statement"):
-        upload_time = datetime.now(timezone.utc)
-        formatted_time = upload_time.strftime("%Y-%m-%dT%H-%M-%S")
+        upload_s = time.time()
+        upload_ms = int(upload_s * 1000) # used to check against Lambda logs for successful completion
+        formatted_time = datetime.fromtimestamp(upload_s, tz=timezone.utc).strftime("%Y-%m-%dT%H-%M-%S-%f")
+
         new_statement_key = f"{STATEMENTS_FOLDER}/{issuer}/{issuer}_statement_{formatted_time}.csv"
 
         with st.status("Uploading to S3...", expanded=True) as status:
@@ -57,7 +60,7 @@ if file and issuer:
             # Check Lambdas completed
             for lambda_function in ["parse_statement", "update_master"]:
                 status.update(label=f"🟠 Waiting for `{lambda_function}` Lambda...")
-                if check_lambda_completed(f"/aws/lambda/{lambda_function}"):
+                if check_lambda_completed(f"/aws/lambda/{lambda_function}", upload_ms):
                     status.write(f"🟢 `{lambda_function}` completed")
                 else:
                     status.update(label=f"{lambda_function}() timed out", state="error")

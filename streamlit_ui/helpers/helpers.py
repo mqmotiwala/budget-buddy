@@ -14,7 +14,7 @@ LAMBDA_TIMEOUT = 30  # seconds
 POLL_INTERVAL = 1    # seconds
 SUCCESSFUL_CONFIRMATION_TEXT = "SUCCESS" # Lambda functions log this explicitly
 
-def check_lambda_completed(log_group, confirmation_text=SUCCESSFUL_CONFIRMATION_TEXT, timeout=LAMBDA_TIMEOUT, poll_interval=POLL_INTERVAL):
+def check_lambda_completed(log_group, invocation_time, confirmation_text=SUCCESSFUL_CONFIRMATION_TEXT, timeout=LAMBDA_TIMEOUT, poll_interval=POLL_INTERVAL):
     """
     Polls recent log streams in the given log group to confirm completion message.
     """
@@ -36,7 +36,7 @@ def check_lambda_completed(log_group, confirmation_text=SUCCESSFUL_CONFIRMATION_
                     startFromHead=False
                 ).get("events", [])
 
-                if any(confirmation_text in e["message"] for e in events):
+                if any(confirmation_text in e["message"] for e in events if e["timestamp"] >= invocation_time):
                     return True
         
         except Exception as e:

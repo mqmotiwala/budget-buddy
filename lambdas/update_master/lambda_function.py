@@ -59,7 +59,7 @@ def lambda_handler(event, context):
                 logger.info(f"Read {len(master_df)} rows from master file")
 
                 # Backup current copy of master file
-                backup_key = f"{BACKUP_FOLDER}/{datetime.now().strftime('%Y%m%d%H%M%S%f')}.parquet"
+                backup_key = f"{BACKUP_FOLDER}/{datetime.now().strftime("%Y-%m-%dT%H-%M-%S-%f")}.parquet"
                 s3.copy_object(
                     Bucket=BUCKET,
                     CopySource={'Bucket': BUCKET, 'Key': MASTER_KEY},
