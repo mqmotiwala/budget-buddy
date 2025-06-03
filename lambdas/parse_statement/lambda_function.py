@@ -58,6 +58,9 @@ def lambda_handler(event, context):
             else:
                 logger.warning(f"file {key} for issuer {issuer} is empty after parsing. No output generated.")
             
+            # streamlit checks for this log to confirm execution success
+            logger.info("SUCCESS")
+            
         except Exception as e:
             logger.exception(f"Failed to process file {key}: {e}")
             raise

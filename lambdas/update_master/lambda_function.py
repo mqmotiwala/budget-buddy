@@ -6,6 +6,7 @@ This function is triggered by S3 events when new cleaned files are uploaded.
 import boto3
 import pandas as pd
 import logging
+from datetime import datetime
 
 from io import BytesIO
 from urllib.parse import unquote_plus
@@ -18,6 +19,7 @@ s3 = boto3.client('s3')
 
 BUCKET = 'aws-budget-buddy'
 MASTER_KEY = 'categorized_expenses.parquet'
+BACKUP_FOLDER = 'backups'
 
 def lambda_handler(event, context):
     logger.info("Lambda triggered with event:")
@@ -41,10 +43,13 @@ def lambda_handler(event, context):
                     'notes': 'str'
                 },
                 parse_dates=['transaction_date'],
-                infer_datetime_format=True
             )
 
-            logger.info(f"Read {len(new_data)} rows from new CSV")
+            if new_data.empty:
+                logger.warning(f"New file {key} is empty. Skipping update.")
+                continue
+            else:
+                logger.info(f"Read {len(new_data)} rows from new CSV")
 
             # Load master file (if it exists)
             try:
@@ -52,6 +57,16 @@ def lambda_handler(event, context):
                 master_body = BytesIO(master_obj['Body'].read())
                 master_df = pd.read_parquet(master_body)
                 logger.info(f"Read {len(master_df)} rows from master file")
+
+                # Backup current copy of master file
+                backup_key = f"{BACKUP_FOLDER}/{datetime.now().strftime('%Y%m%d%H%M%S%f')}.parquet"
+                s3.copy_object(
+                    Bucket=BUCKET,
+                    CopySource={'Bucket': BUCKET, 'Key': MASTER_KEY},
+                    Key=backup_key
+                )
+
+                logger.info(f"backed up latest master file at {backup_key}")
 
             except ClientError as e:
                 if e.response['Error']['Code'] == 'NoSuchKey':
@@ -86,7 +101,10 @@ def lambda_handler(event, context):
                 Body=out_buffer.getvalue()
             )
 
-            logger.info(f"Successfully updated master file at {MASTER_KEY}")
+            logger.info(f"updated master file at {MASTER_KEY}")
+
+            # streamlit checks for this log to confirm execution success
+            logger.info("SUCCESS")
 
         except Exception as e:
             logger.exception(f"Failed to process file {key}: {e}")
