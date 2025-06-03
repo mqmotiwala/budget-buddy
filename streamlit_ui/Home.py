@@ -1,4 +1,5 @@
 import time 
+import json
 import boto3
 import traceback
 import pandas as pd
@@ -64,9 +65,10 @@ if file and issuer:
 
                 if isinstance(res, list):
                     # logs containing error msg detected
-                    st.error(f"🔴 `{lambda_function}` encountered errors:")
-                    for msg in res:
-                        st.code(msg, language="text")
+                    error_msg = f"🔴 `{lambda_function}` errored out"
+                    st.error(error_msg)      
+                    status.update(label=error_msg, state="error")                     
+                    st.code(json.dumps(res, indent=4), language="json")
                     st.stop()
                 else:
                     if res:

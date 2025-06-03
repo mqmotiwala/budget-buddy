@@ -52,11 +52,11 @@ def check_lambda_completed(log_group, invocation_time):
                 valid_events = [e for e in events if e["timestamp"] >= invocation_time]
                 logged_messages = [e["message"] for e in valid_events]
 
-                if any(SUCCESSFUL_CONFIRMATION_TEXT in logged_messages):
+                if any(SUCCESSFUL_CONFIRMATION_TEXT in msg for msg in logged_messages):
                     return True
                 
-                elif any(ERROR_CONFIRMATION_TEXT in logged_messages):
-                    return logged_messages
+                elif any(ERROR_CONFIRMATION_TEXT in msg for msg in logged_messages):
+                    return valid_events
         
         except Exception as e:
             st.warning(f"Log check failed: {e}")
