@@ -1,6 +1,7 @@
 import time
-import streamlit as st
 import boto3
+import traceback
+import streamlit as st
 from helpers.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
 
 logs = boto3.client(
@@ -41,6 +42,10 @@ def check_lambda_completed(log_group, invocation_time, confirmation_text=SUCCESS
         
         except Exception as e:
             st.warning(f"Log check failed: {e}")
+            st.text("Detailed traceback:")
+            st.code(traceback.format_exc())
+            
+            break
 
         time.sleep(poll_interval)
     
