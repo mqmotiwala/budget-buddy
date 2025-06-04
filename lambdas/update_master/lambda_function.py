@@ -20,6 +20,8 @@ s3 = boto3.client('s3')
 BUCKET = 'aws-budget-buddy'
 MASTER_KEY = 'categorized_expenses.parquet'
 BACKUP_FOLDER = 'backups'
+REQUIRED_COLS = ["transaction_id", "category", "notes"]
+DEDUPLICATION_COLS = ["transaction_id"]
 
 def lambda_handler(event, context):
     logger.info("Lambda triggered with event:")
@@ -81,16 +83,15 @@ def lambda_handler(event, context):
 
             # include required columns in master schema
             # handles cases where master is empty or missing 
-            for col in ['category', 'notes']:
+            for col in REQUIRED_COLS:
                 if col not in master_df.columns:
                     master_df[col] = pd.NA
 
             # Merge and deduplicate
             # we ignore columns that are not in both dataframes, handling categorized expenses gracefully
             combined = pd.concat([master_df, new_data], ignore_index=True)
-            deduplication_cols = [col for col in new_data.columns if col in combined.columns]
             before = len(combined)
-            combined = combined.drop_duplicates(subset=deduplication_cols)
+            combined = combined.drop_duplicates(subset=DEDUPLICATION_COLS)
             after = len(combined)
             logger.info(f"Dropped {before - after} duplicate rows. Final row count: {after}")
 
