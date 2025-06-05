@@ -107,12 +107,13 @@ st.header("Categorize Expenses")
 try:
     if master_exists:
         uncategorized = master[master[c.CATEGORY_COLUMN].isna() | (master[c.CATEGORY_COLUMN] == "")]
+        TBD = master[(master[c.CATEGORY_COLUMN] == "TBD")]
 
-        if uncategorized.empty:
-            st.text("Nice! all expenses are categorized.")
+        if uncategorized.empty and TBD.empty:
+            st.text(":rainbow[Nice!] All expenses are categorized.")
             st.text("You can still edit existing categories below.")
         else:
-            st.text(f"Found {len(uncategorized)} uncategorized expenses.")
+            st.markdown(f":rainbow[{len(uncategorized) + len(TBD)}/{len(master)}] expenses are uncategorized and/or TBD!")
 
         # if there are uncategorized expenses, filter only for them
         # otherwise show all expenses
