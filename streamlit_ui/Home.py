@@ -44,9 +44,10 @@ try:
     master = pd.read_parquet(buffer)
     master = master.sort_values(by="transaction_date", ascending=True)
 
-    recommended_date = master.groupby("statement_issuer")["transaction_date"].max().min().strftime("%A, %B %d, %Y")
-    
+    latest_dates = master.groupby("statement_issuer")["transaction_date"].max()
+    recommended_date = latest_dates.min().strftime("%A, %B %d, %Y")
     st.markdown(f"To prevent data gaps, give me statements from :rainbow[{recommended_date}] or earlier!")
+
     master_exists = True
 except ClientError as e:
     if e.response['Error']['Code'] == 'NoSuchKey':
