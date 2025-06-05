@@ -2,7 +2,7 @@ import time
 import boto3
 import traceback
 import streamlit as st
-from helpers.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
+from helpers.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, FILTER_PLACEHOLDER_TEXT
 
 logs = boto3.client(
     "logs",
@@ -17,6 +17,8 @@ POLL_INTERVAL = 1    # seconds
 # Lambda functions log these explicitly
 SUCCESSFUL_CONFIRMATION_TEXT = "SUCCESS"
 ERROR_CONFIRMATION_TEXT = "FAILURE" 
+
+MISSING_ARGUMENTS_NOTICE = "Missing one or more required arguments."
 
 def check_lambda_completed(log_group, invocation_time):
     """
@@ -68,3 +70,32 @@ def check_lambda_completed(log_group, invocation_time):
         time.sleep(POLL_INTERVAL)
     
     return False
+
+def create_text_filter(prompt_text, add_divider=True):
+    if prompt_text is None:
+        raise ValueError(MISSING_ARGUMENTS_NOTICE)
+    
+    # places a divider by default for aesthetics
+    if add_divider:
+        st.divider()
+
+    st.text(prompt_text)
+    return st.text_input(
+        label = prompt_text, 
+        placeholder = FILTER_PLACEHOLDER_TEXT,
+        label_visibility = 'collapsed'
+    ) 
+
+def create_multiselect_filter(prompt_text, options, default, disabled=False, include_aesthetics_boilerplate=True):
+    if include_aesthetics_boilerplate:
+        st.divider()
+        st.text(prompt_text)
+    
+    return st.multiselect(
+        label = prompt_text,
+        options = options,
+        default = default,
+        placeholder = FILTER_PLACEHOLDER_TEXT,
+        label_visibility ='collapsed',
+        disabled = disabled
+    )

@@ -7,8 +7,16 @@ S3_BUCKET = "aws-budget-buddy"
 AWS_ACCESS_KEY_ID = st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
 AWS_SECRET_ACCESS_KEY = st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
 AWS_REGION = st.secrets["aws"]["AWS_REGION"]
+STATEMENTS_FOLDER = "statements"
+MASTER_KEY = "categorized_expenses.parquet"
 CATEGORIES_KEY = "categories.json"
 
+# general settings
+PREFERRED_UI_DATE_FORMAT_MOMENTJS = "dddd, MMMM DD, YYYY"
+PREFERRED_UI_DATE_FORMAT_STRFTIME = "%A, %B %d, %Y"
+FILTER_PLACEHOLDER_TEXT = "No filter is applied when there is no input."
+
+# categories
 s3 = boto3.client(
     "s3",
     aws_access_key_id=AWS_ACCESS_KEY_ID,
@@ -38,7 +46,7 @@ column_configs = {
         label="Transaction Date",
         disabled=True,
         help=EDITING_NOT_ALLOWED_TEXT,
-        format="dddd, MMMM DD, YYYY",
+        format=PREFERRED_UI_DATE_FORMAT_MOMENTJS,
         width="medium"
     ),
 
@@ -57,8 +65,7 @@ column_configs = {
 
     ISSUER_COLUMN: st.column_config.TextColumn(
         label="Statement Issuer",
-        disabled=True,
-        help=EDITING_NOT_ALLOWED_TEXT,
+        disabled=True, 
         width="medium"
     ),
 
