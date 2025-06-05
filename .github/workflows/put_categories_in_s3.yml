@@ -1,0 +1,22 @@
+name: Upload categories.json to S3
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload-categories:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Upload categories.json to root of S3
+        run: |
+          aws s3 cp categories.json s3://${{ secrets.S3_BUCKET_NAME }}/categories.json
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
