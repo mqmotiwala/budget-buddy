@@ -144,6 +144,7 @@ try:
             )
             
             st.success("Categorized data synced to cloud.")
+            st.rerun()
     else:
         st.write("No categorized expenses found. Start by uploading some statements.")
 
