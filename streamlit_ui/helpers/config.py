@@ -16,7 +16,6 @@ s3 = boto3.client(
     region_name=AWS_REGION
 )
 
-
 response = s3.get_object(Bucket=S3_BUCKET, Key=CATEGORIES_KEY)
 CATEGORIES = sorted(json.loads(response['Body']))
 
