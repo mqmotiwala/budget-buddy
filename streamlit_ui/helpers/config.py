@@ -1,22 +1,24 @@
 import streamlit as st
+import boto3
+import json
 
-# AWS secrets
+# AWS
+S3_BUCKET = "aws-budget-buddy"
 AWS_ACCESS_KEY_ID = st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
 AWS_SECRET_ACCESS_KEY = st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
 AWS_REGION = st.secrets["aws"]["AWS_REGION"]
+CATEGORIES_KEY = "categories.json"
 
-# Expense categories
-CATEGORIES = [
-    "Groceries", 
-    "Dining", 
-    "Transport", 
-    "Travel", 
-    "Utilities",
-    "Subscriptions", 
-    "Healthcare", 
-    "Entertainment", 
-    "Other"
-]
+s3 = boto3.client(
+    "s3",
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    region_name=AWS_REGION
+)
+
+
+response = s3.get_object(Bucket=S3_BUCKET, Key=CATEGORIES_KEY)
+CATEGORIES = sorted(json.loads(response['Body']))
 
 # column names
 TRANSACTION_ID_COLUMN = "transaction_id"
