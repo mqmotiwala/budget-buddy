@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 from io import BytesIO
 from datetime import datetime, timezone
-from helpers.config import CATEGORIES, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION
+import helpers.config as c 
 from helpers.helpers import check_lambda_completed
 from botocore.exceptions import ClientError
 
@@ -14,13 +14,11 @@ S3_BUCKET = "aws-budget-buddy"
 STATEMENTS_FOLDER = "statements"
 MASTER_KEY = "categorized_expenses.parquet"
 
-CATEGORY_COLUMN = "category"
-
 s3 = boto3.client(
     "s3",
-    aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    region_name=AWS_REGION
+    aws_access_key_id=c.AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=c.AWS_SECRET_ACCESS_KEY,
+    region_name=c.AWS_REGION
 )
 
 # generate list of existing issuer folders in S3
@@ -36,6 +34,23 @@ st.text("Get started below!\nUse the sidebar to access the analytics page.")
 # ─── Upload Section ────────────────────────────────────────────────────
 
 st.header("Upload Statements")
+
+# load master data
+try:
+    response = s3.get_object(Bucket=S3_BUCKET, Key=MASTER_KEY)
+    raw = response["Body"].read()
+    buffer = BytesIO(raw)
+
+    master = pd.read_parquet(buffer)
+    master = master.sort_values(by="transaction_date", ascending=True)
+
+    recommended_date = master.groupby("statement_issuer")["transaction_date"].max().min().strftime("%A, %B %d, %Y")
+    
+    st.markdown(f"To prevent data gaps, give me statements from :rainbow[{recommended_date}] or earlier!")
+    master_exists = True
+except ClientError as e:
+    if e.response['Error']['Code'] == 'NoSuchKey':
+        master_exists = False
 
 issuer = st.selectbox("Select Issuer", existing_issuers, index=None, key="issuer_select")
 file = st.file_uploader("Upload CSV File", type=["csv"], key="file_uploader")
@@ -80,60 +95,56 @@ if file and issuer:
                 
             status.update(label="done!", state="complete", expanded=False)
 
+            # force streamlit to rerun the page
+            # this will grab the new master contents
+            st.rerun()
+
 # ─── Categorize Section ────────────────────────────────────────────────────
 
 st.header("Categorize Expenses")
 
 try:
-    response = s3.get_object(Bucket=S3_BUCKET, Key=MASTER_KEY)
-    raw = response["Body"].read()
-    buffer = BytesIO(raw)
+    if master_exists:
+        uncategorized = master[master[c.CATEGORY_COLUMN].isna() | (master[c.CATEGORY_COLUMN] == "")]
 
-    data = pd.read_parquet(buffer)
-    data = data.sort_values(by="transaction_date", ascending=True)
+        if uncategorized.empty:
+            st.text("Nice! all expenses are categorized.")
+            st.text("You can still edit existing categories below.")
+        else:
+            st.text(f"Found {len(uncategorized)} uncategorized expenses.")
 
-    uncategorized = data[data[CATEGORY_COLUMN].isna() | (data[CATEGORY_COLUMN] == "")]
+        # if there are uncategorized expenses, filter only for them
+        # otherwise show all expenses
+        show_all = st.checkbox("Show all expenses", value=uncategorized.empty)
+        if not show_all:
+            master = uncategorized
 
-    if uncategorized.empty:
-        st.text("Nice! all expenses are categorized.")
-        st.text("You can still edit existing categories below.")
+        if show_all or not uncategorized.empty: 
+            edited = st.data_editor(
+                master,
+                use_container_width=True,
+                num_rows="dynamic",
+                hide_index=True,
+                column_config=c.column_configs
+            )
+
+        if st.button("💾 Save Changes"):
+            # Save to Parquet in memory
+            out_buffer = BytesIO()
+            edited.to_parquet(out_buffer, index=False, compression='snappy')
+
+            # Upload updated master file
+            s3.put_object(
+                Bucket=S3_BUCKET,
+                Key=MASTER_KEY,
+                Body=out_buffer.getvalue()
+            )
+            
+            st.success("Categorized data synced to cloud.")
     else:
-        st.text(f"Found {len(uncategorized)} uncategorized expenses.")
+        st.write("No categorized expenses found. Start by uploading some statements.")
 
-    # if there are uncategorized expenses, filter only for them
-    # otherwise show all expenses
-    show_all = st.checkbox("Show all expenses", value=uncategorized.empty)
-    if not show_all:
-        data = uncategorized
-
-    if show_all or not uncategorized.empty: 
-        edited = st.data_editor(
-            data,
-            use_container_width=True,
-            num_rows="dynamic",
-            hide_index=True,
-            # configure CATEGORY_COLUMN as a dropdown selector
-            column_config={CATEGORY_COLUMN: st.column_config.SelectboxColumn(options=CATEGORIES)}
-        )
-
-    if st.button("💾 Save Changes"):
-        # Save to Parquet in memory
-        out_buffer = BytesIO()
-        edited.to_parquet(out_buffer, index=False, compression='snappy')
-
-        # Upload updated master file
-        s3.put_object(
-            Bucket=S3_BUCKET,
-            Key=MASTER_KEY,
-            Body=out_buffer.getvalue()
-        )
-        
-        st.success("Categorized data synced to cloud.")
-
-except ClientError as e:
-    if e.response['Error']['Code'] == 'NoSuchKey':
-        st.text("No categorized expenses found. Start by uploading some statements.")
-    else:
-        st.error(f"Failed to load or process data: {e}")
-        st.text("Detailed traceback:")
-        st.code(traceback.format_exc())
+except Exception as e:
+    st.error(f"Failed to handle master data: {e}")
+    st.text("Detailed traceback:")
+    st.code(traceback.format_exc())
