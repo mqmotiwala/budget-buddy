@@ -17,7 +17,7 @@ s3 = boto3.client(
 )
 
 response = s3.get_object(Bucket=S3_BUCKET, Key=CATEGORIES_KEY)
-CATEGORIES = sorted(json.loads(response['Body'].read().decode("utf-8")))
+CATEGORIES = json.loads(response['Body'].read().decode("utf-8"))
 
 # column names
 TRANSACTION_ID_COLUMN = "transaction_id"

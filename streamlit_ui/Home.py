@@ -121,14 +121,14 @@ try:
         edited = st.data_editor(
             display_df,
             use_container_width=True,
-            num_rows="dynamic",
+            num_rows="fixed",
             hide_index=True,
             column_config=c.column_configs
         )
 
         if st.button("💾 Save Changes"):
             # Update original master with edited categories
-            master.update(edited, errors='raise')
+            master.update(edited)
 
             # Save to Parquet in memory
             out_buffer = BytesIO()
