@@ -116,22 +116,23 @@ try:
         # if there are uncategorized expenses, filter only for them
         # otherwise show all expenses
         show_all = st.checkbox("Show all expenses", value=uncategorized.empty)
-        if not show_all:
-            master = uncategorized
+        display_df = master if show_all else uncategorized
 
-        if show_all or not uncategorized.empty: 
-            edited = st.data_editor(
-                master,
-                use_container_width=True,
-                num_rows="dynamic",
-                hide_index=True,
-                column_config=c.column_configs
-            )
+        edited = st.data_editor(
+            display_df,
+            use_container_width=True,
+            num_rows="dynamic",
+            hide_index=True,
+            column_config=c.column_configs
+        )
 
         if st.button("💾 Save Changes"):
+            # Update original master with edited categories
+            master.update(edited, errors='raise')
+
             # Save to Parquet in memory
             out_buffer = BytesIO()
-            edited.to_parquet(out_buffer, index=False, compression='snappy')
+            master.to_parquet(out_buffer, index=False, compression='snappy')
 
             # Upload updated master file
             s3.put_object(
