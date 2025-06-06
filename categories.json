@@ -11,6 +11,8 @@
   "Income",
   "Travel",
   "Rent",
+  "Healthcare",
+  "Home Expenses",
   "Other",
   "Void",
   "TBD"
