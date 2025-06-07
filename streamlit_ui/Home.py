@@ -55,8 +55,12 @@ except ClientError as e:
     if e.response['Error']['Code'] == 'NoSuchKey':
         master_exists = False
 
-issuer = st.selectbox("Select Issuer", existing_issuers, index=None)
-file = st.file_uploader("Upload CSV File", type=["csv"])
+def clear_issuer_selection():
+    """Callback to clear issuer selection when a new file is uploaded."""
+    st.session_state.issuer = None
+
+file = st.file_uploader("Upload CSV File", type=["csv"], on_change=clear_issuer_selection)
+issuer = st.selectbox("Select Issuer", existing_issuers, index=None, key="issuer")
 
 if file and issuer:
     if st.button("📤 Upload Statement"):
