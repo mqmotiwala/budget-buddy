@@ -1,0 +1,40 @@
+{
+    "Income": [
+        "Mufaddal's Income",
+        "Sakina's Income"
+    ],
+    "Savings": [
+        "Investments",
+        "Karzan"
+    ],
+    "Expenses": {
+        "General": [
+            "Eating Out",
+            "Groceries",
+            "Fun Expenses",
+            "Subscriptions",
+            "Mufaddal's Personal Expenses",
+            "Sakina's Personal Expenses"
+        ],
+        "Housing": [
+            "Rent",
+            "Utilities"
+        ],
+        "Vehicle": [
+            "Gas",
+            "Maintenance",
+            "Fines",
+            "Insurance",
+            "Registration",
+            "Parking & Tolls"
+        ],
+        "Travel": [
+            "Transportation",
+            "Lodging",
+            "Dining",
+            "Experiences",
+            "Shopping",
+            "General"
+        ]
+    }
+}
