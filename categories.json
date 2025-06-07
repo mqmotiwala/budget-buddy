@@ -1,19 +1,41 @@
-[
-  "Eating Out",
-  "Groceries",
-  "Fun Expenses",
-  "Subscriptions",
-  "Mufaddal's Personal Expenses",
-  "Sakina's Personal Expenses",
-  "Vehicle Expenses",
-  "Utilities",
-  "Savings",
-  "Income",
-  "Travel",
-  "Rent",
-  "Healthcare",
-  "Home Expenses",
-  "Other",
-  "Void",
-  "TBD"
-]
+{
+    "Income": [
+        "Income"
+    ],
+    "Savings": [
+        "Savings"
+    ],
+    "Expenses": {
+        "General": [
+            "Eating Out",
+            "Groceries",
+            "Fun Expenses",
+            "Subscriptions",
+            "Mufaddal's Personal Expenses",
+            "Sakina's Personal Expenses"
+        ],
+        "Housing": [
+            "Rent",
+            "Utilities"
+        ],
+        "Vehicle": [
+            "Vehicle Expenses"
+        ],
+        "Travel": [
+            "Travel"
+        ],
+        "Healthcare": [
+          "Healthcare"
+        ],
+        "Home": [
+          "Home Expenses"
+        ],
+        "Miscellaneous": [
+          "Other"
+        ]
+    },
+    "Non-Expenses": [
+      "Void",
+      "TBD"
+    ]
+}

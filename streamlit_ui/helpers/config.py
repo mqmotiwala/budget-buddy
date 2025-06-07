@@ -1,6 +1,7 @@
 import streamlit as st
 import boto3
 import json
+from helpers import extract_categories
 
 # AWS
 S3_BUCKET = "aws-budget-buddy"
@@ -25,7 +26,8 @@ s3 = boto3.client(
 )
 
 response = s3.get_object(Bucket=S3_BUCKET, Key=CATEGORIES_KEY)
-CATEGORIES = json.loads(response['Body'].read().decode("utf-8"))
+CATEGORIES_BODY = json.loads(response['Body'].read().decode("utf-8"))
+CATEGORIES = extract_categories(CATEGORIES_BODY)
 
 # column names
 TRANSACTION_ID_COLUMN = "transaction_id"
@@ -35,9 +37,11 @@ AMOUNT_COLUMN = "amount"
 ISSUER_COLUMN = "statement_issuer"
 CATEGORY_COLUMN = "category"
 NOTES_COLUMN = "notes"
+GROUP_BY_COLUMN = "group_by"
 
 # st.data_editor settings
 EDITING_NOT_ALLOWED_TEXT = "Editing is not allowed here! It breaks deduplication logic. 🤭"
+SELECTION_PROMPT = "To get started, make a selection."
 
 column_configs = {
     TRANSACTION_ID_COLUMN: None,
@@ -80,3 +84,16 @@ column_configs = {
         width="large"
     )
 }
+
+# analytics time ranges options
+TIME_RANGES = [
+    "Current Month",
+    "Current Year",
+    "Last Month",
+    "Trailing 3 Months",
+    "Trailing 6 Months",
+    "Trailing Year",
+    "Last Year",
+    "All Time",
+    "Custom"
+]
