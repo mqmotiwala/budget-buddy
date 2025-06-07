@@ -3,20 +3,14 @@ import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
 
-
 def sankey(df):
     CUSTOM_NODES = {
-        # node_label: explanation
         "Expenses": "Parent node for all expenses",
         "To Cash Reserve": "Node targeted when income-(savings+expenses) > 0",
         "From Cash Reserve": "Node sourced when income-(savings+expenses) < 0"
     }
-    
-    source, target, value = [], [], []
 
-    # define nodes 
-    nodes = c.CATEGORIES + list(CUSTOM_NODES.keys())
-    node_indices = {category: i for i, category in enumerate(nodes)}
+    source, target, value = [], [], []
 
     # net values for all categories
     totals = {
@@ -30,42 +24,73 @@ def sankey(df):
         primary_node_categories = c.extract_categories(c.CATEGORIES_BODY[primary_node])
         primary_nodes_net_values[primary_node] = sum(totals.get(category, 0) for category in primary_node_categories)
 
-    # link Income → Expenses
+    # Determine flow delta
+    total_outflows = primary_nodes_net_values["Savings"] + primary_nodes_net_values["Expenses"]
+    total_inflows = primary_nodes_net_values["Income"]
+    delta = total_inflows - total_outflows
+
+    # Compute value for custom nodes
+    custom_node_values = {
+        "To Cash Reserve": delta if delta > 0 else 0,
+        "From Cash Reserve": abs(delta) if delta < 0 else 0,
+        "Expenses": primary_nodes_net_values["Expenses"]
+    }
+
+    # Build labeled nodes with currency (includes both config + dynamic)
+    raw_nodes = c.CATEGORIES + list(CUSTOM_NODES.keys())
+    nodes = []
+    node_customdata = []
+    node_values = []
+
+    for category in raw_nodes:
+        value_for_node = (
+            primary_nodes_net_values.get(category) or
+            totals.get(category) or
+            custom_node_values.get(category, 0)
+        )
+        label = f"{category} (${value_for_node:,.2f})" if value_for_node else category
+        nodes.append(label)
+        node_customdata.append(f"${value_for_node:,.2f}")
+        node_values.append(value_for_node)
+
+    # Create index mapping based on raw node names
+    node_indices = {category: i for i, category in enumerate(raw_nodes)}
+
+    # Income → Expenses
     source.append(node_indices["Income"])
     target.append(node_indices["Expenses"])
     value.append(primary_nodes_net_values["Expenses"])
 
-    # link Income → Savings
+    # Income → Savings
     source.append(node_indices["Income"])
     target.append(node_indices["Savings"])
     value.append(primary_nodes_net_values["Savings"])
 
-    # link Expenses → each expense category
+    # Expenses → each expense category
     for category in c.EXPENSES_CATEGORIES:
         source.append(node_indices["Expenses"])
         target.append(node_indices[category])
         value.append(totals.get(category, 0))
 
-    # Handle overspending/underspending
-    total_outflows = primary_nodes_net_values["Savings"] + primary_nodes_net_values["Expenses"]
-    total_inflows = primary_nodes_net_values["Income"]
-    delta = total_inflows - total_outflows
+    # Delta-based flow
     if delta > 0:
         source.append(node_indices["Income"])
         target.append(node_indices["To Cash Reserve"])
         value.append(delta)
-    else:
+    elif delta < 0:
         source.append(node_indices["From Cash Reserve"])
         target.append(node_indices["Income"])
         value.append(abs(delta))
 
-    # Build Sankey
+    # Build Sankey diagram
     fig = go.Figure(data=[go.Sankey(
         node=dict(
             pad=15,
             thickness=20,
             line=dict(color="black", width=0.5),
             label=nodes,
+            customdata=node_customdata,
+            hovertemplate='%{label}<br>Total: %{customdata}<extra></extra>',
         ),
         link=dict(
             source=source,
@@ -74,7 +99,7 @@ def sankey(df):
         )
     )])
 
-    fig.update_layout(title="Income vs Spending Sankey", font_size=12)
+    fig.update_layout(height=450)
     return fig
 
 def sunburst_pie(df):
