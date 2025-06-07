@@ -222,7 +222,7 @@ st.header("💡Review Analytics")
 time_range = st.pills(
     label="Select analysis time range",
     options = c.TIME_RANGES,
-    default = "Trailing Year"
+    default = None
 )
 
 min_date = master[c.DATE_COLUMN].min()
