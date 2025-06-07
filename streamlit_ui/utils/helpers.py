@@ -150,3 +150,7 @@ def get_time_range_dates(time_range):
         raise ValueError(f"Unsupported time range: {time_range}")
     
     return start, end
+
+def clear_issuer_selection():
+    """Callback to clear issuer selection when a new file is uploaded."""
+    st.session_state.issuer = None

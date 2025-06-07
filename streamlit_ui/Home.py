@@ -2,25 +2,18 @@ import time
 import json
 import boto3
 import traceback
+import config as c 
 import pandas as pd
 import streamlit as st
-from io import BytesIO
-from datetime import datetime, timezone
-from datetime import timedelta as td
-import config as c 
 import utils.helpers as h
 import utils.plotters as p
+from io import BytesIO
+from datetime import timedelta as td
+from datetime import datetime, timezone
 from botocore.exceptions import ClientError
 
-s3 = boto3.client(
-    "s3",
-    aws_access_key_id=c.AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=c.AWS_SECRET_ACCESS_KEY,
-    region_name=c.AWS_REGION
-)
-
 # generate list of existing issuer folders in S3
-response = s3.list_objects_v2(Bucket=c.S3_BUCKET, Prefix=f"{c.STATEMENTS_FOLDER}/", Delimiter="/")
+response = c.s3.list_objects_v2(Bucket=c.S3_BUCKET, Prefix=f"{c.STATEMENTS_FOLDER}/", Delimiter="/")
 existing_issuers = [prefix["Prefix"].split("/")[1] for prefix in response.get("CommonPrefixes", [])]
 
 # ─── Header ────────────────────────────────────────────────────────────────
@@ -39,7 +32,7 @@ st.header("🗂️ Upload Statements")
 
 # load master data
 try:
-    response = s3.get_object(Bucket=c.S3_BUCKET, Key=c.MASTER_KEY)
+    response = c.s3.get_object(Bucket=c.S3_BUCKET, Key=c.MASTER_KEY)
     raw = response["Body"].read()
     buffer = BytesIO(raw)
 
@@ -55,11 +48,7 @@ except ClientError as e:
     if e.response['Error']['Code'] == 'NoSuchKey':
         master_exists = False
 
-def clear_issuer_selection():
-    """Callback to clear issuer selection when a new file is uploaded."""
-    st.session_state.issuer = None
-
-file = st.file_uploader("Upload CSV File", type=["csv"], on_change=clear_issuer_selection)
+file = st.file_uploader("Upload CSV File", type=["csv"], on_change=h.clear_issuer_selection)
 issuer = st.selectbox("Select Issuer", existing_issuers, index=None, key="issuer")
 
 if file and issuer:
@@ -72,7 +61,7 @@ if file and issuer:
 
         with st.status("Uploading to S3...", expanded=True) as status:
             try:
-                s3.upload_fileobj(file, c.S3_BUCKET, new_statement_key)
+                c.s3.upload_fileobj(file, c.S3_BUCKET, new_statement_key)
                 status.write("🟢 Uploaded to S3")
             except Exception as e:
                 status.update(label="Upload failed", state="error")
@@ -202,7 +191,7 @@ try:
             master.to_parquet(out_buffer, index=False, compression='snappy')
 
             # Upload updated master file
-            s3.put_object(
+            c.s3.put_object(
                 Bucket=c.S3_BUCKET,
                 Key=c.MASTER_KEY,
                 Body=out_buffer.getvalue()
