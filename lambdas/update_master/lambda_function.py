@@ -58,10 +58,13 @@ def lambda_handler(event, context):
                 master_obj = s3.get_object(Bucket=BUCKET, Key=MASTER_KEY)
                 master_body = BytesIO(master_obj['Body'].read())
                 master_df = pd.read_parquet(master_body)
-                logger.info(f"Read {len(master_df)} rows from master file")
+
+                num_rows = len(master_df)
+                num_uncategorized = master_df['category'].isna().sum()
+                logger.info(f"Read {num_rows} rows from master file")
 
                 # Backup current copy of master file
-                backup_key = f"{BACKUP_FOLDER}/{datetime.now().strftime("%Y-%m-%dT%H-%M-%S-%f")}.parquet"
+                backup_key = f"{BACKUP_FOLDER}/{num_uncategorized}-{num_rows}__{datetime.now().strftime("%Y-%m-%dT%H-%M-%S-%f")}.parquet"
                 s3.copy_object(
                     Bucket=BUCKET,
                     CopySource={'Bucket': BUCKET, 'Key': MASTER_KEY},
