@@ -128,6 +128,8 @@ try:
             max_amount = int(master[c.AMOUNT_COLUMN].max())
             range_step = 10
 
+            # needed to ensure default values are rounded to the nearest range step
+            # as they must be within the options, which are multiples of range_step
             mround = lambda x: range_step * round(x / range_step)
             min_amount, max_amount = st.select_slider(
                 label=prompt_text, 
