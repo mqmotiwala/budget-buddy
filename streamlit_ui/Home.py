@@ -127,10 +127,12 @@ try:
             min_amount = int(master[c.AMOUNT_COLUMN].min())
             max_amount = int(master[c.AMOUNT_COLUMN].max())
             range_step = 10
+
+            mround = lambda x: range_step * round(x / range_step)
             min_amount, max_amount = st.select_slider(
                 label=prompt_text, 
                 options=range(min_amount, max_amount + range_step, range_step),
-                value=(min_amount, max_amount),
+                value=(mround(min_amount), mround(max_amount)),
                 format_func=lambda x: f"-${abs(x):,}" if x < 0 else f"${x:,}",
                 label_visibility='collapsed'
             )
