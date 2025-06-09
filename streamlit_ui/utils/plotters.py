@@ -2,6 +2,7 @@ import config as c
 import pandas as pd
 import plotly.graph_objects as go
 import altair as alt
+from utils.helpers import hex_to_rgba
 
 def sankey(df):
     CUSTOM_NODES = {
@@ -31,15 +32,14 @@ def sankey(df):
 
     # Compute value for custom nodes
     custom_node_values = {
-        "To Cash Reserve": delta if delta > 0 else 0,
-        "From Cash Reserve": abs(delta) if delta < 0 else 0,
+        "To Cash Reserve": max(delta, 0),
+        "From Cash Reserve": abs(min(delta, 0)),
         "Expenses": primary_nodes_net_values["Expenses"]
     }
 
     # Build labeled nodes with currency (includes both config + dynamic)
     raw_nodes = c.CATEGORIES + list(CUSTOM_NODES.keys())
     nodes = []
-    node_customdata = []
     node_values = []
 
     for category in raw_nodes:
@@ -50,7 +50,6 @@ def sankey(df):
         )
         label = f"{category} (${value_for_node:,.2f})" if value_for_node else category
         nodes.append(label)
-        node_customdata.append(f"${value_for_node:,.2f}")
         node_values.append(value_for_node)
 
     # Create index mapping based on raw node names
@@ -72,7 +71,7 @@ def sankey(df):
         target.append(node_indices[category])
         value.append(totals.get(category, 0))
 
-    # Delta-based flow
+    # Delta flow
     if delta > 0:
         source.append(node_indices["Income"])
         target.append(node_indices["To Cash Reserve"])
@@ -82,24 +81,47 @@ def sankey(df):
         target.append(node_indices["Income"])
         value.append(abs(delta))
 
+    # colors
+    colors = {
+        "Income": "#014400",
+        "Savings": "#72b772",
+        "Expenses": "#d62728",
+        "To Cash Reserve": "#17becf",
+        "From Cash Reserve": "#ff7f0e"
+    }
+
+    # assign node colors in the same order as nodes
+    # default color is used for general expense types
+    node_colors = [colors.get(cat, "#da7878") for cat in raw_nodes]
+
+    # color links by the target node
+    link_colors = [hex_to_rgba(node_colors[t]) for t in target]
+
     # Build Sankey diagram
     fig = go.Figure(data=[go.Sankey(
         node=dict(
-            pad=15,
-            thickness=20,
+            pad=20,
+            thickness=30,
             line=dict(color="black", width=0.5),
             label=nodes,
-            customdata=node_customdata,
-            hovertemplate='%{label}<br>Total: %{customdata}<extra></extra>',
+            color=node_colors,
+            hovertemplate='%{label}<br><extra></extra>',
         ),
         link=dict(
             source=source,
             target=target,
             value=value,
+            color=link_colors,
+            hovertemplate="%{source.label} → %{target.label}<br>"
         )
     )])
 
-    fig.update_layout(height=450)
+    fig.update_layout(
+        height=450,
+        margin=dict(l=0, r=0, t=0, b=10),
+        font=dict(size=14, color="green"),
+    )
+
     return fig
 
 def line_chart(df, x_values):

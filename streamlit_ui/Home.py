@@ -1,6 +1,5 @@
 import time 
 import json
-import boto3
 import traceback
 import config as c 
 import pandas as pd
@@ -272,14 +271,11 @@ if start and end:
     ]
 
     st.markdown(f"Analyzing :rainbow[{start.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)} - {end.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)}]")
-    st.markdown("##### *Cashflow At A Glance*")
-
-    st.plotly_chart(p.sankey(analyze), use_container_width=True)
 
     st.markdown("##### *Deep Dives by Category*")
     filtered_categories = st.multiselect(
         label = "Filter by category",
-        options = c.CATEGORIES, 
+        options = [cat for cat in c.CATEGORIES if cat not in c.NON_EXPENSES_CATEGORIES], 
         default = None,
         placeholder = c.SELECTION_PROMPT,
         label_visibility ='collapsed'
@@ -309,4 +305,7 @@ if start and end:
             p.line_chart(filtered, x_values),
             use_container_width=True
         )
+
+    st.markdown("##### *Cashflow At A Glance*")
+    st.plotly_chart(p.sankey(analyze), use_container_width=True)
 

@@ -154,3 +154,23 @@ def get_time_range_dates(time_range):
 def clear_issuer_selection():
     """Callback to clear issuer selection when a new file is uploaded."""
     st.session_state.issuer = None
+
+def hex_to_rgba(hex_color, alpha=0.1):
+    """
+    Convert a hex color string to an RGBA tuple.
+    
+    Args:
+        hex_color (str): Hex color string (e.g., '#FF5733').
+        alpha (float): Alpha value for transparency (0.0 to 1.0).
+    
+    Returns:
+        str: string formatted as: rgba(<RGBA color tuple>).
+        str is used to be compatible with Plotly.
+    """
+
+    hex_color = hex_color.lstrip('#')
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+
+    return f"rgba({r},{g},{b},{alpha})"
