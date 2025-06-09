@@ -1,7 +1,7 @@
 import config as c 
 import pandas as pd
 import plotly.graph_objects as go
-import plotly.express as px
+import altair as alt
 
 def sankey(df):
     CUSTOM_NODES = {
@@ -102,17 +102,57 @@ def sankey(df):
     fig.update_layout(height=450)
     return fig
 
-def sunburst_pie(df):
-    # Aggregate absolute costs by category
-    grouped = df.groupby(c.CATEGORY_COLUMN, as_index=False)[c.AMOUNT_COLUMN].sum()
-    grouped[c.AMOUNT_COLUMN] = grouped[c.AMOUNT_COLUMN].abs()
+def line_chart(df, x_values):
+    """
+    df: a DataFrame already grouped and filtered
+    x_values: list of Python datetime objects for your ticks
+    """
 
-    grouped["category_group"] = grouped["category"].apply(lambda x: x if x in ["Savings, Income"] else "Expenses")
-
-    fig = px.sunburst(grouped, path=["category_group", "category"], values='amount')
-    
-    fig.update_traces(
-        hovertemplate='<b>%{label}</b><br>Amount: %{value}<br>Percent of %{parent}: %{percentParent:.1%}<br>Percent of total: %{percentRoot:.1%}<extra></extra>'
+    # Base line + point chart
+    base = alt.Chart(df).mark_line(
+        point=alt.OverlayMarkDef(filled=True, size=40),
+        strokeWidth=2.5
+    ).encode(
+        x=alt.X(
+            c.GROUP_BY_COLUMN,
+            type='temporal',
+            title="Date",
+            scale=alt.Scale(domain=x_values),
+            axis=alt.Axis(
+                values=x_values,
+                labelAngle=0,
+                labelOverlap=True,
+                format="%b %Y"
+            )
+        ),
+        y=alt.Y(
+            c.AMOUNT_COLUMN,
+            title="Amount",
+            axis=alt.Axis(format="$,.0f")
+        ),
+        color=c.CATEGORY_COLUMN,
+        tooltip=[
+            alt.Tooltip(c.GROUP_BY_COLUMN, type="temporal", title="Date", format="%b %d, %Y"),
+            alt.Tooltip(c.CATEGORY_COLUMN, type="nominal", title="Category"),
+            alt.Tooltip(c.AMOUNT_COLUMN, type="quantitative", title="Amount", format="$,.0f"),
+        ]
     )
 
-    return fig
+    # Text labels on each point
+    labels = alt.Chart(df).mark_text(
+        align='center',
+        baseline='bottom',
+        dy=-5,
+        size=14
+    ).encode(
+        x=alt.X(c.GROUP_BY_COLUMN, type='temporal', scale=alt.Scale(domain=x_values)),
+        y=c.AMOUNT_COLUMN,
+        text=alt.Text(c.AMOUNT_COLUMN, format="$,.0f"),
+        color=c.CATEGORY_COLUMN  # keep labels same color as line
+    )
+
+    # Layer them and set size
+    return (base + labels).properties(
+        width='container',
+        height=400
+    )

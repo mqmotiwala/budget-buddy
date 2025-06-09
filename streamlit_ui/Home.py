@@ -272,10 +272,11 @@ if start and end:
     ]
 
     st.markdown(f"Analyzing :rainbow[{start.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)} - {end.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)}]")
-    st.header("Cashflow Summary")
+    st.markdown("##### *Cashflow At A Glance*")
+
     st.plotly_chart(p.sankey(analyze), use_container_width=True)
 
-    st.header("Deep Dives by Category")
+    st.markdown("##### *Deep Dives by Category*")
     filtered_categories = st.multiselect(
         label = "Filter by category",
         options = c.CATEGORIES, 
@@ -295,12 +296,17 @@ if start and end:
             # group by day
             analyze[c.GROUP_BY_COLUMN] = analyze[c.DATE_COLUMN]
 
-        grouped = analyze.groupby([c.CATEGORY_COLUMN, c.GROUP_BY_COLUMN])[c.AMOUNT_COLUMN].sum().abs().reset_index()
+        x_values = sorted(analyze[c.GROUP_BY_COLUMN].unique())
 
-        # Line chart of amount over time
-        st.line_chart(
-            data=grouped[grouped[c.CATEGORY_COLUMN].isin(filtered_categories)],
-            x=c.GROUP_BY_COLUMN,
-            y=c.AMOUNT_COLUMN,
-            color=c.CATEGORY_COLUMN
+        grouped = analyze.groupby([c.CATEGORY_COLUMN, c.GROUP_BY_COLUMN])[c.AMOUNT_COLUMN].sum().abs().reset_index()
+        filtered = grouped[grouped[c.CATEGORY_COLUMN].isin(filtered_categories)]
+
+        # build Python‐datetime tick list
+        raw_vals = sorted(filtered[c.GROUP_BY_COLUMN].unique())
+        x_values = [pd.to_datetime(val).to_pydatetime() for val in raw_vals]
+
+        st.altair_chart(
+            p.line_chart(filtered, x_values),
+            use_container_width=True
         )
+
