@@ -170,7 +170,8 @@ def line_chart(df, x_values):
         x=alt.X(c.GROUP_BY_COLUMN, type='temporal', scale=alt.Scale(domain=x_values)),
         y=c.AMOUNT_COLUMN,
         text=alt.Text(c.AMOUNT_COLUMN, format="$,.0f"),
-        color=c.CATEGORY_COLUMN  # keep labels same color as line
+        color=c.CATEGORY_COLUMN,  # keep labels same color as line
+        tooltip=alt.value(None)
     )
 
     # Layer them and set size
