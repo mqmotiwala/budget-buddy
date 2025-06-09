@@ -102,10 +102,10 @@ def sankey(df):
         node=dict(
             pad=20,
             thickness=30,
-            line=dict(color="black", width=0.5),
+            line=dict(color="black", width=1),
             label=nodes,
             color=node_colors,
-            hovertemplate='%{label}<br><extra></extra>',
+            hovertemplate='%{label}<br><extra></extra>'
         ),
         link=dict(
             source=source,
@@ -118,8 +118,8 @@ def sankey(df):
 
     fig.update_layout(
         height=450,
-        margin=dict(l=0, r=0, t=0, b=10),
-        font=dict(size=14, color="green"),
+        margin=dict(l=0, r=0, t=30, b=10),
+        font=dict(size=18, weight=500, family="Courier New"),
     )
 
     return fig
