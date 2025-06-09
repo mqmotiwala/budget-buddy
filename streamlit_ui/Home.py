@@ -109,14 +109,31 @@ try:
             # date filter
             prompt_text = "Filter by transaction dates"
             st.text(prompt_text)
-            min_date, max_date = st.select_slider(
-                label=prompt_text, 
-                options=master[c.DATE_COLUMN], 
-                value=(master[c.DATE_COLUMN].min(), master[c.DATE_COLUMN].max()),
-                format_func=lambda x: x.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME),
-                label_visibility='collapsed'
+
+            min_date_in_master = master[c.DATE_COLUMN].min()
+            max_date_in_master = master[c.DATE_COLUMN].max()
+            res = st.date_input(
+                label = "date_input",
+                label_visibility = "collapsed",
+                value = [min_date_in_master, max_date_in_master],
+                min_value = min_date_in_master, 
+                max_value = max_date_in_master
             )
-            
+
+            # streamlit enforces at least one date selection
+            # so if user selects a single date, the second date is taken as the max date
+            if len(res) == 1:
+                min_date = res[0]
+                max_date = max_date_in_master
+
+                st.badge(f"Filtering for all dates since {min_date}", icon=":material/info:", color="orange")
+            else:
+                min_date, max_date = res
+                
+            # convert to datetime for pandas
+            min_date = pd.to_datetime(min_date)
+            max_date = pd.to_datetime(max_date)
+
             # description filter
             description_filter_setting = h.create_text_filter(prompt_text="Filter by description")
 
@@ -124,8 +141,8 @@ try:
             st.divider()
             prompt_text = "Filter by transaction amount"
             st.text(prompt_text)
-            min_amount = int(master[c.AMOUNT_COLUMN].min())
-            max_amount = int(master[c.AMOUNT_COLUMN].max())
+            min_amount_in_master = int(master[c.AMOUNT_COLUMN].min())
+            max_amount_in_master = int(master[c.AMOUNT_COLUMN].max())
             range_step = 10
 
             # needed to ensure default values are rounded to the nearest range step
@@ -133,8 +150,8 @@ try:
             mround = lambda x: range_step * round(x / range_step)
             min_amount, max_amount = st.select_slider(
                 label=prompt_text, 
-                options=range(min_amount, max_amount + range_step, range_step),
-                value=(mround(min_amount), mround(max_amount)),
+                options=range(min_amount_in_master, max_amount_in_master + range_step, range_step),
+                value=(mround(min_amount_in_master), mround(max_amount_in_master)),
                 format_func=lambda x: f"-${abs(x):,}" if x < 0 else f"${x:,}",
                 label_visibility='collapsed'
             )
@@ -222,19 +239,17 @@ time_range = st.pills(
     default = None
 )
 
-min_date = master[c.DATE_COLUMN].min()
-max_date = master[c.DATE_COLUMN].max()
 start, end = None, None
 if time_range == "All Time":
-    start, end = min_date, max_date
+    start, end = min_date_in_master, max_date_in_master
 elif time_range == "Custom":
     try:
         start, end = st.date_input(
             label = "date_input",
             label_visibility = "collapsed",
             value = [],
-            min_value = min_date, 
-            max_value = max_date
+            min_value = min_date_in_master, 
+            max_value = max_date_in_master
         )
     except ValueError:
         # user has not finished making a selection
