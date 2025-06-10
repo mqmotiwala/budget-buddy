@@ -119,7 +119,7 @@ def sankey(df):
     fig.update_layout(
         height=450,
         margin=dict(l=0, r=0, t=30, b=10),
-        font=dict(size=18, weight=500, family="Courier New"),
+        font=dict(size=14, weight=1000, family="Courier New"),
     )
 
     return fig

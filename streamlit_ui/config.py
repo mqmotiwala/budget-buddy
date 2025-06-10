@@ -15,6 +15,7 @@ CATEGORIES_KEY = "categories.json"
 PREFERRED_UI_DATE_FORMAT_MOMENTJS = "dddd, MMMM DD, YYYY"
 PREFERRED_UI_DATE_FORMAT_STRFTIME = "%A, %B %d, %Y"
 FILTER_PLACEHOLDER_TEXT = "No filter is applied when there is no input."
+FILE_UPLOADER_HELP_TEXT = "Your privacy is important to us. Statements uploaded remain encyrpted at all times."
 
 # categories
 s3 = boto3.client(
