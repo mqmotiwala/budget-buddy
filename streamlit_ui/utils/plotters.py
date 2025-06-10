@@ -117,6 +117,9 @@ def sankey(df):
     )])
 
     fig.update_layout(
+        # override any Streamlit theming injections
+        # without this, I have observed major formatting issues with node annotation labels
+        template=None,
         height=450,
         margin=dict(l=0, r=0, t=30, b=10),
         font=dict(size=14, weight=1000, family="Courier New"),
