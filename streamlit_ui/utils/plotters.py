@@ -102,10 +102,10 @@ def sankey(df):
         node=dict(
             pad=20,
             thickness=30,
-            line=dict(color="black", width=0.5),
+            line=dict(color="black", width=1),
             label=nodes,
             color=node_colors,
-            hovertemplate='%{label}<br><extra></extra>',
+            hovertemplate='%{label}<br><extra></extra>'
         ),
         link=dict(
             source=source,
@@ -117,9 +117,12 @@ def sankey(df):
     )])
 
     fig.update_layout(
+        # override any Streamlit theming injections
+        # without this, I have observed major formatting issues with node annotation labels
+        template=None,
         height=450,
-        margin=dict(l=0, r=0, t=0, b=10),
-        font=dict(size=14, color="green"),
+        margin=dict(l=0, r=0, t=30, b=10),
+        font=dict(size=14, weight=1000, family="Courier New"),
     )
 
     return fig

@@ -47,7 +47,7 @@ except ClientError as e:
     if e.response['Error']['Code'] == 'NoSuchKey':
         master_exists = False
 
-file = st.file_uploader("Upload CSV File", type=["csv"], on_change=h.clear_issuer_selection)
+file = st.file_uploader("Upload CSV File", type=["csv"], on_change=h.clear_issuer_selection, help=c.FILE_UPLOADER_HELP_TEXT)
 issuer = st.selectbox("Select Issuer", existing_issuers, index=None, key="issuer")
 
 if file and issuer:
