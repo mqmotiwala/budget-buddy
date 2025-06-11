@@ -186,7 +186,8 @@ try:
         category_filter = master[c.CATEGORY_COLUMN].isna() if show_uncategorized_only else master[c.CATEGORY_COLUMN].isin(filtered_categories) if filtered_categories and len(filtered_categories) != len(c.CATEGORIES) else True
         notes_filter = master[c.NOTES_COLUMN].str.contains(notes_filter_setting, case=False, na=False) if notes_filter_setting else True
 
-        display_df = master[date_filter & description_filter & amount_filter & issuer_filter & category_filter & notes_filter]
+        display_df = master[date_filter & description_filter & amount_filter & issuer_filter & category_filter & notes_filter] \
+                        .sort_values(by=c.DATE_COLUMN, ascending=False)
 
         if uncategorized.empty and TBD.empty:
             st.markdown(":rainbow[Nice!] All expenses are categorized.")
@@ -264,11 +265,14 @@ if start and end:
     end = pd.Timestamp(end)
 
     # prepare analysis dataframe
+    # copy to avoid modifying the original master DataFrame
+    # without copy, Pandas raises a SettingWithCopyWarning 
+    # and behavior can be unpredictable 
     analyze = master[
         master[c.DATE_COLUMN].between(start, end) &
         master[c.CATEGORY_COLUMN].notna() &
         ~master[c.CATEGORY_COLUMN].isin(c.NON_EXPENSES_CATEGORIES)
-    ]
+    ].copy()
 
     st.markdown(f"Analyzing :rainbow[{start.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)} - {end.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)}]")
 
