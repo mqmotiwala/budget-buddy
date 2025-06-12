@@ -122,7 +122,8 @@ def show_categorize():
 
         if st.button("💾 Save Changes"):
             # Update original master with edited categories
-            master.update(edited)
+            for col in edited.columns:
+                master.loc[edited.index, col] = edited[col]
 
             # upload updated master to S3
             h.update_master(master)
