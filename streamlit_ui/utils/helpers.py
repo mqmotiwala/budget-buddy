@@ -1,5 +1,7 @@
 import time
+import json
 import boto3
+import base64
 import traceback
 import config as c 
 import pandas as pd
@@ -8,6 +10,7 @@ import streamlit as st
 from io import BytesIO
 from datetime import date, timedelta
 from botocore.exceptions import ClientError
+from streamlit_oauth import OAuth2Component, StreamlitOauthError
 from config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, FILTER_PLACEHOLDER_TEXT
 
 logs = boto3.client(
@@ -215,3 +218,48 @@ def update_master(master):
         Key=f"{c.MASTER_KEY}",
         Body=out_buffer.getvalue()
     )
+
+def get_auth():
+    """
+    Get the authentication token for Streamlit session state.
+    """
+
+    try:
+        # create a button to start the OAuth2 flow
+        oauth2 = OAuth2Component(c.CLIENT_ID, c.CLIENT_SECRET, c.AUTHORIZE_ENDPOINT, c.TOKEN_ENDPOINT, c.TOKEN_ENDPOINT, c.REVOKE_ENDPOINT)
+        result = oauth2.authorize_button(
+            name="Continue with Google",
+            icon="https://www.google.com.tw/favicon.ico",
+            redirect_uri=c.REDIRECT_URI,
+            scope="openid email profile",
+            key="google",
+            extras_params={"prompt": "consent", "access_type": "offline"},
+            use_container_width=True,
+            pkce='S256',
+        )
+        
+        if result:
+            # decode the id_token jwt and get the user's email address
+            id_token = result["token"]["id_token"]
+            # verify the signature is an optional step for security
+            payload = id_token.split(".")[1]
+            # add padding to the payload if needed
+            payload += "=" * (-len(payload) % 4)
+            payload = json.loads(base64.b64decode(payload))
+            email = payload["email"]
+
+            st.session_state["auth"] = email
+            st.session_state["token"] = result["token"]
+
+            # rerun the app to reflect the new state
+            st.rerun()
+
+    except StreamlitOauthError as e:
+        # user cancelled the OAuth2 flow
+        pass
+
+    except Exception as e:
+        st.error(f"An error occurred during authentication: {e}")
+        st.text("Detailed traceback:")
+        st.code(traceback.format_exc())
+        st.stop()

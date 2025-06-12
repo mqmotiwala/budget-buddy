@@ -11,11 +11,28 @@ STATEMENTS_FOLDER = "statements"
 MASTER_KEY = "categorized_expenses.parquet"
 CATEGORIES_KEY = "categories.json"
 
+# Google OAuth2Component instance
+CLIENT_ID = st.secrets["oauth"]["GOOGLE_CLIENT_ID"]
+CLIENT_SECRET = st.secrets["oauth"]["GOOGLE_CLIENT_SECRET"]
+REDIRECT_URI = st.secrets.get("oauth", {}).get("REDIRECT_URI", "http://localhost:8501")
+AUTHORIZE_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
+TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
+REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke"
+
 # general settings
 PREFERRED_UI_DATE_FORMAT_MOMENTJS = "dddd, MMMM DD, YYYY"
 PREFERRED_UI_DATE_FORMAT_STRFTIME = "%A, %B %d, %Y"
 FILTER_PLACEHOLDER_TEXT = "No filter is applied when there is no input."
 FILE_UPLOADER_HELP_TEXT = "Your privacy is important to us. Statements uploaded remain encrypted at all times."
+STREAMLIT_PAGE_CONFIG = {
+    "page_title": "Budget Buddy",
+    "page_icon": "🤓",
+    "layout": "wide",
+    "initial_sidebar_state": "auto",
+    "menu_items": {
+        "Report a Bug": "mailto:mqmotiwala@gmail.com"
+    }
+}
 
 # categories
 s3 = boto3.client(
