@@ -212,6 +212,6 @@ def update_master(master):
     # Upload updated master file
     c.s3.put_object(
         Bucket=c.S3_BUCKET,
-        Key=c.MASTER_KEY,
+        Key=f"{c.MASTER_KEY}",
         Body=out_buffer.getvalue()
     )

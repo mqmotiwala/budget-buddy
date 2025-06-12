@@ -7,9 +7,13 @@ import utils.helpers as h
 from datetime import datetime, timezone
 
 def show_upload():
+    # ensure master data is loaded
+    if "master" not in st.session_state:
+        st.session_state.master = h.load_master()
+    master = st.session_state.master
+
     st.header("🗂️ Upload Statements")
     
-    master = st.session_state.master
     if master is not None and not master.empty:
         latest_dates = master.groupby(c.ISSUER_COLUMN)[c.DATE_COLUMN].max()
         recommended_date = latest_dates.min().strftime("%A, %B %d, %Y")

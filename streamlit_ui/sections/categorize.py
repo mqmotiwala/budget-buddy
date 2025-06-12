@@ -131,6 +131,7 @@ def show_categorize():
 
             # force reload master data
             st.session_state.master = h.load_master()
+            st.rerun()
 
     except Exception as e:
         st.error(f"Failed to handle master data: {e}")
