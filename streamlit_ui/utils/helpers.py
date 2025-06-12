@@ -1,9 +1,13 @@
 import time
 import boto3
 import traceback
+import config as c 
 import pandas as pd
 import streamlit as st
+
+from io import BytesIO
 from datetime import date, timedelta
+from botocore.exceptions import ClientError
 from config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, FILTER_PLACEHOLDER_TEXT
 
 logs = boto3.client(
@@ -174,3 +178,40 @@ def hex_to_rgba(hex_color, alpha=0.1):
     b = int(hex_color[4:6], 16)
 
     return f"rgba({r},{g},{b},{alpha})"
+
+def load_master():
+    master = None
+
+    # load master data
+    try:
+        response = c.s3.get_object(Bucket=c.S3_BUCKET, Key=c.MASTER_KEY)
+        raw = response["Body"].read()
+        buffer = BytesIO(raw)
+
+        master = pd.read_parquet(buffer)
+        master = master.sort_values(by=c.DATE_COLUMN, ascending=False)
+
+    except ClientError as e:
+        if e.response['Error']['Code'] == 'NoSuchKey':
+            # master doesn't exist, skip loading
+            pass
+
+    return master
+
+def update_master(master):
+    """
+    Update master in S3 with the provided DataFrame.
+    
+    Args:
+        master (pd.DataFrame): The DataFrame to upload as the new master.
+    """
+    # Save to Parquet in memory
+    out_buffer = BytesIO()
+    master.to_parquet(out_buffer, index=False, compression='snappy')
+
+    # Upload updated master file
+    c.s3.put_object(
+        Bucket=c.S3_BUCKET,
+        Key=c.MASTER_KEY,
+        Body=out_buffer.getvalue()
+    )

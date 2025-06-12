@@ -59,6 +59,10 @@ NON_EXPENSES_PARENT_CATEGORY_KEY = "Non-Expenses"
 EXPENSES_CATEGORIES = extract_categories(CATEGORIES_BODY.get(EXPENSES_PARENT_CATEGORY_KEY, {}))
 NON_EXPENSES_CATEGORIES = extract_categories(CATEGORIES_BODY.get(NON_EXPENSES_PARENT_CATEGORY_KEY, {}))
 
+# existing issuers
+response = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=f"{STATEMENTS_FOLDER}/", Delimiter="/")
+EXISTING_ISSUERS = [prefix["Prefix"].split("/")[1] for prefix in response.get("CommonPrefixes", [])]
+
 # column names
 TRANSACTION_ID_COLUMN = "transaction_id"
 DATE_COLUMN = "transaction_date"
