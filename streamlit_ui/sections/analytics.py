@@ -17,7 +17,7 @@ def show_analytics():
     time_range = st.pills(
         label="Select analysis time range",
         options = c.TIME_RANGES,
-        default = None
+        default = "Trailing 3 Months"
     )
 
     min_date_in_master = master[c.DATE_COLUMN].min()
