@@ -257,15 +257,15 @@ def get_auth():
         if result:
             # decode the id_token jwt and get the user's email address
             id_token = result["token"]["id_token"]
+            st.session_state["token"] = result["token"]
+            
             # verify the signature is an optional step for security
             payload = id_token.split(".")[1]
             # add padding to the payload if needed
             payload += "=" * (-len(payload) % 4)
             payload = json.loads(base64.b64decode(payload))
-            email = payload["email"]
 
-            st.session_state["auth"] = email
-            st.session_state["token"] = result["token"]
+            st.session_state["auth"] = payload.get("email")
             st.session_state["first_name"] = payload.get("given_name")
             st.session_state["last_name"] = payload.get("family_name")
 
