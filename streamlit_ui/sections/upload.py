@@ -1,5 +1,6 @@
 import time 
 import json
+import random
 import traceback
 import streamlit as st
 import utils.helpers as h
@@ -25,41 +26,56 @@ def show_upload():
     if file and issuer:
         if st.button("📤 Upload Statement"):
             upload_s = time.time()
-            upload_ms = int(upload_s) * 1000 # used to check against Lambda logs for successful completion
             formatted_time = datetime.fromtimestamp(upload_s, tz=timezone.utc).strftime("%Y-%m-%dT%H-%M-%S-%f")
 
             new_statement_key = f"{st.session_state.STATEMENTS_FOLDER}/{issuer}/{issuer}_statement_{formatted_time}.csv"
 
-            with st.status("Uploading to S3...", expanded=True) as status:
+            with st.status("Uploading to cloud...", expanded=True) as status:
                 try:
                     c.s3.upload_fileobj(file, c.S3_BUCKET, new_statement_key)
-                    status.write("🟢 Uploaded to S3")
+                    status.write("🟢 Uploaded to cloud ☁️")
                 except Exception as e:
                     status.update(label="Upload failed", state="error")
                     st.error(f"🔴 Upload failed: {e}")
                     st.code(traceback.format_exc())
                     st.stop()
 
-                # Check Lambdas completed
-                for lambda_function in ["parse_statement", "update_master"]:
-                    status.update(label=f"🟠 Waiting for `{lambda_function}` Lambda function to complete...")
-                    res = h.check_lambda_completed(f"/aws/lambda/{lambda_function}", upload_ms)
+                input_payload = {"key": new_statement_key}
+                response = c.sf.start_execution(
+                    stateMachineArn=c.UPLOAD_STATE_MACHINE,
+                    input=json.dumps(input_payload)
+                )
 
-                    if isinstance(res, list):
-                        # logs containing error msg detected
-                        error_msg = f"🔴 `{lambda_function}` errored out"
-                        st.error(error_msg)      
-                        status.update(label=error_msg, state="error")                     
-                        st.code(json.dumps(res, indent=4), language="json")
-                        st.stop()
+                execution_arn = response["executionArn"]
+                completed_reference = None
+                used_msgs = set()
+                msg = None
+                while c.sf.describe_execution(executionArn=execution_arn)["status"] not in c.UPLOAD_STATE_MACHINE_TERMINAL_STATES:
+                    current, completed = h.get_step_status(execution_arn)
+
+                    # get a msg not yet used
+                    available_msgs = c.LAMBDAS.get(current)["progress"]
+                    unused_msgs = list(set(available_msgs) - used_msgs)
+
+                    if unused_msgs:
+                        msg = random.choice(unused_msgs)
+                        used_msgs.add(msg)
+                        status.write(msg)
                     else:
-                        if res:
-                            status.write(f"🟢 `{lambda_function}` completed")
-                        else:
-                            status.update(label=f"{lambda_function}() timed out", state="error")
-                            st.warning(f"🔴 Could not verify {lambda_function} executed in time.")
-                            st.stop()
-                    
+                        # all messages used, allow reuse
+                        used_msgs.clear()
+
+                    if completed != completed_reference:
+                        completed_reference = completed
+                        status.write(c.LAMBDAS.get(completed)["success"])
+                      
+                    time.sleep(0.1)
+
+                # One last check to emit final completed step's success message
+                current, completed = h.get_step_status(execution_arn)
+                if completed != completed_reference:
+                    status.write(c.LAMBDAS.get(completed)["success"])
+
                 status.update(label="done!", state="complete", expanded=False)
 
                 # update master contents

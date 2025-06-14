@@ -71,6 +71,38 @@ def check_lambda_completed(log_group, invocation_time):
     
     return False
 
+def get_step_status(execution_arn):
+    history = c.sf.get_execution_history(
+        executionArn=execution_arn,
+        maxResults=1000,
+        reverseOrder=True
+    )
+
+    current_step = None
+    last_completed_step = None
+
+    for event in history["events"]:
+        if not current_step and event["type"] == "TaskStateEntered":
+            current_step = event["stateEnteredEventDetails"]["name"]
+
+        if not last_completed_step and event["type"] in ["TaskStateExited", "TaskSucceeded"]:
+            last_completed_step = event["stateExitedEventDetails"]["name"]
+
+        if event["type"] in ["TaskFailed", "ExecutionFailed"]:
+            details = event.get("taskFailedEventDetails") or event.get("executionFailedEventDetails") or {}
+            error_info = {
+                "error": details.get("error", "UnknownError"),
+                "cause": details.get("cause", "No cause provided"),
+                "failed_step": current_step
+            }
+
+            st.error(f"Something went wrong at {current_step or 'unknown step'}: {error_info['error']} — {error_info['cause']}")
+
+        if current_step and last_completed_step:
+            break  # found both, break loop
+
+    return current_step, last_completed_step
+
 def create_text_filter(prompt_text, add_divider=True):
     if prompt_text is None:
         raise ValueError(MISSING_ARGUMENTS_NOTICE)

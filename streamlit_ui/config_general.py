@@ -10,6 +10,7 @@ S3_BUCKET = "aws-budget-buddy"
 AWS_ACCESS_KEY_ID = st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
 AWS_SECRET_ACCESS_KEY = st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
 AWS_REGION = st.secrets["aws"]["AWS_REGION"]
+UPLOAD_STATE_MACHINE = "arn:aws:states:us-west-2:676206945006:stateMachine:handle_new_statement"
 
 # boto3 clients
 logs = boto3.client(
@@ -21,6 +22,13 @@ logs = boto3.client(
 
 s3 = boto3.client(
     "s3",
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    region_name=AWS_REGION
+)
+
+sf = boto3.client(
+    "stepfunctions",
     aws_access_key_id=AWS_ACCESS_KEY_ID,
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     region_name=AWS_REGION
@@ -114,4 +122,44 @@ TIME_RANGES = [
     "Last Year",
     "All Time",
     "Custom"
+]
+
+# Lambda functions
+LAMBDAS = {
+    "parse_statement": {
+        "progress": [
+            "🟠 Giving the CSV a good look...",
+            "🟠 Decoding your transactions, line by line...",
+            "🟠 Matching CSV format to our secret sauce...",
+            "🟠 Parsing with care — no charge left behind!",
+            "🟠 Sorting the signal from the noise...",
+            "🟠 Zipping everything into place — almost there!"
+        ],
+        "success": "🟢 I parsed your statement 😋",
+        "error": "🔴 Something went wrong while processing this statement. 😔",
+    },
+    "update_master": {
+        "progress": [
+            "🟠 Dusting off the old master file...",
+            "🟠 Merging the new with the old — carefully...",
+            "🟠 Crunching some numbers...",
+            "🟠 Shuffling through your transactions...",
+            "🟠 Checking for duplicates...",
+            "🟠 Giving your expenses a quick polish...",
+            "🟠 Preparing your financial history scroll...",
+            "🟠 Compressing data, gotta stay lean...",
+            "🟠 Backing up the old master file...",
+            "🟠 Uploading the updated ledger to the cloud gods...",
+            "🟠 Giving your master file a well-deserved upgrade..."
+        ],
+        "success": "🟢 Updated master file! Let's get categorizin' 🤩",
+        "error": "🔴 Something went wrong while updating your master file. 😔"
+    }
+}
+
+UPLOAD_STATE_MACHINE_TERMINAL_STATES = [
+    "SUCCEEDED",
+    "FAILED",
+    "TIMED OUT",
+    "ABORTED"
 ]
