@@ -1,7 +1,8 @@
 
-import config as c
 import streamlit as st
 import utils.helpers as h
+import config_user as u
+import config_general as c
 
 from sections.header import show_header 
 from sections.upload import show_upload
@@ -15,6 +16,8 @@ if "auth" not in st.session_state:
     show_landing()
 
 else:
+    u.load_user_config()
+
     # initialize master data for session, if needed
     # the session state key is used to access master across all app logic
     # its forcefully reloaded when required by invoking h.load_master()

@@ -10,7 +10,7 @@ def show_landing():
 
     st.divider()
 
-    st.markdown("## 📖 Frequently Asked Questions")
+    st.subheader("💡 Frequently Asked Questions")
 
     with st.expander("What is Budget Buddy?"):
         st.write("Budget Buddy is a personal finance assistant that helps you analyze your spending by uploading your bank statements. Think of it as Mint, but simpler and more focused on clarity.")

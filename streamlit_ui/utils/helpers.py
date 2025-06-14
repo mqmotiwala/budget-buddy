@@ -1,24 +1,15 @@
 import time
 import json
-import boto3
 import base64
 import traceback
-import config as c 
 import pandas as pd
 import streamlit as st
+import config_general as c
 
 from io import BytesIO
 from datetime import date, timedelta
 from botocore.exceptions import ClientError
 from streamlit_oauth import OAuth2Component, StreamlitOauthError
-from config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION, FILTER_PLACEHOLDER_TEXT
-
-logs = boto3.client(
-    "logs",
-    aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    region_name=AWS_REGION
-)
 
 LAMBDA_TIMEOUT = 30  # seconds
 POLL_INTERVAL = 1    # seconds
@@ -45,7 +36,7 @@ def check_lambda_completed(log_group, invocation_time):
 
     for _ in range(LAMBDA_TIMEOUT // POLL_INTERVAL):
         try:
-            streams = logs.describe_log_streams(
+            streams = c.logs.describe_log_streams(
                 logGroupName=log_group,
                 orderBy="LastEventTime",
                 descending=True,
@@ -54,7 +45,7 @@ def check_lambda_completed(log_group, invocation_time):
 
             for stream in streams.get("logStreams", []):
                 stream_name = stream["logStreamName"]
-                events = logs.get_log_events(
+                events = c.logs.get_log_events(
                     logGroupName=log_group,
                     logStreamName=stream_name,
                     startFromHead=False
@@ -91,7 +82,7 @@ def create_text_filter(prompt_text, add_divider=True):
     st.text(prompt_text)
     return st.text_input(
         label = prompt_text, 
-        placeholder = FILTER_PLACEHOLDER_TEXT,
+        placeholder = c.FILTER_PLACEHOLDER_TEXT,
         label_visibility = 'collapsed'
     ) 
 
@@ -104,7 +95,7 @@ def create_multiselect_filter(prompt_text, options, default, disabled=False, inc
         label = prompt_text,
         options = options,
         default = default,
-        placeholder = FILTER_PLACEHOLDER_TEXT,
+        placeholder = c.FILTER_PLACEHOLDER_TEXT,
         label_visibility ='collapsed',
         disabled = disabled
     )
@@ -187,7 +178,7 @@ def load_master():
 
     # load master data
     try:
-        response = c.s3.get_object(Bucket=c.S3_BUCKET, Key=c.MASTER_KEY)
+        response = c.s3.get_object(Bucket=c.S3_BUCKET, Key=st.session_state.MASTER_KEY)
         raw = response["Body"].read()
         buffer = BytesIO(raw)
 
@@ -215,9 +206,34 @@ def update_master(master):
     # Upload updated master file
     c.s3.put_object(
         Bucket=c.S3_BUCKET,
-        Key=f"{c.MASTER_KEY}",
+        Key=f"{st.session_state.MASTER_KEY}",
         Body=out_buffer.getvalue()
     )
+
+def extract_categories(obj):
+    """
+    Recursively extract all terminal string values from a nested structure (dicts/lists).
+
+    Args:
+        obj (dict, list, or str): A nested combination of dictionaries, lists, and string values.
+
+    Returns:
+        list of str: All string values found anywhere in the structure, in depth-first order.
+    """
+
+    res = []
+    if isinstance(obj, dict):
+        for value in obj.values():
+            res.extend(extract_categories(value))
+
+    elif isinstance(obj, list):
+        for item in obj:
+            res.extend(extract_categories(item))
+
+    elif isinstance(obj, str):
+        res.append(obj)
+
+    return res
 
 def get_auth():
     """
@@ -250,6 +266,8 @@ def get_auth():
 
             st.session_state["auth"] = email
             st.session_state["token"] = result["token"]
+            st.session_state["first_name"] = payload.get("given_name")
+            st.session_state["last_name"] = payload.get("family_name")
 
             # rerun the app to reflect the new state
             st.rerun()
@@ -263,3 +281,10 @@ def get_auth():
         st.text("Detailed traceback:")
         st.code(traceback.format_exc())
         st.stop()
+
+def logout():
+    # effectively resets the session
+    st.session_state.clear()
+
+    # rerun the app to reflect the new state
+    st.rerun()

@@ -18,8 +18,6 @@ logger.setLevel(logging.INFO)
 s3 = boto3.client('s3')
 
 BUCKET = 'aws-budget-buddy'
-MASTER_KEY = 'categorized_expenses.parquet'
-BACKUP_FOLDER = 'backups'
 REQUIRED_COLS = ["transaction_id", "category", "notes"]
 DEDUPLICATION_COLS = ["transaction_id"]
 
@@ -32,6 +30,14 @@ def lambda_handler(event, context):
         key = unquote_plus(record['s3']['object']['key'])
 
         logger.info(f"Processing file from bucket: {bucket}, key: {key}")
+
+        # extract details from key path
+        # expected format: <user>/cleaned/file.csv
+        parts = key.split("/")
+        user = parts[0]
+
+        MASTER_KEY = f'{user}/categorized_expenses.parquet'
+        BACKUP_FOLDER = f'{user}/backups'
 
         try:
             obj = s3.get_object(Bucket=bucket, Key=key)

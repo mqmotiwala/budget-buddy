@@ -28,9 +28,11 @@ def lambda_handler(event, context):
         logger.info(f"Processing file from bucket: {bucket}, key: {key}")
 
         try:
-            # extract issuer from key path
-            # expected format: statements/<issuer>/file.csv
-            issuer = key.split("/")[1]
+            # extract details from key path
+            # expected format: <user>/statements/<issuer>/file.csv
+            parts = key.split("/")
+            user = parts[0]
+            issuer = parts[2]
             if not ISSUER_CONFIG.get(issuer):
                 raise ValueError(f"issuer {issuer} in key: {key} is unsupported/unrecognized")
 
@@ -46,7 +48,7 @@ def lambda_handler(event, context):
                 # set output key based on issuer and date range
                 min_date = clean["transaction_date"].dropna().min().date().strftime("%Y-%m-%d")
                 max_date = clean["transaction_date"].dropna().max().date().strftime("%Y-%m-%d")
-                output_key = f"cleaned/{issuer.lower()} activity from {min_date} to {max_date}.csv"
+                output_key = f"{user}/cleaned/{issuer.lower()} activity from {min_date} to {max_date}.csv"
                 logger.info(f"Uploading cleaned file to: {output_key}")
                 
                 s3.put_object(

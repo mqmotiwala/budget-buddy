@@ -1,16 +1,31 @@
-import streamlit as st
-import boto3
-import json
+'''
+contains all config settings that are general across all users
+'''
 
-# AWS
+import boto3
+import streamlit as st
+
+# AWS General
 S3_BUCKET = "aws-budget-buddy"
 AWS_ACCESS_KEY_ID = st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
 AWS_SECRET_ACCESS_KEY = st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
 AWS_REGION = st.secrets["aws"]["AWS_REGION"]
-STATEMENTS_FOLDER = "statements"
-MASTER_KEY = "categorized_expenses.parquet"
-CATEGORIES_KEY = "categories.json"
 
+# boto3 clients
+logs = boto3.client(
+    "logs",
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    region_name=AWS_REGION
+)
+
+s3 = boto3.client(
+    "s3",
+    aws_access_key_id=AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+    region_name=AWS_REGION
+)
+    
 # Google OAuth2Component instance
 CLIENT_ID = st.secrets["oauth"]["GOOGLE_CLIENT_ID"]
 CLIENT_SECRET = st.secrets["oauth"]["GOOGLE_CLIENT_SECRET"]
@@ -19,7 +34,9 @@ AUTHORIZE_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
 REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke"
 
-# general settings
+# misc. settings
+EXPENSES_PARENT_CATEGORY_KEY = "Expenses"
+NON_EXPENSES_PARENT_CATEGORY_KEY = "Non-Expenses"
 PREFERRED_UI_DATE_FORMAT_MOMENTJS = "dddd, MMMM DD, YYYY"
 PREFERRED_UI_DATE_FORMAT_STRFTIME = "%A, %B %d, %Y"
 FILTER_PLACEHOLDER_TEXT = "No filter is applied when there is no input."
@@ -33,52 +50,6 @@ STREAMLIT_PAGE_CONFIG = {
         "Report a Bug": "mailto:mqmotiwala@gmail.com"
     }
 }
-
-# categories
-s3 = boto3.client(
-    "s3",
-    aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-    region_name=AWS_REGION
-)
-
-def extract_categories(obj):
-    """
-    Recursively extract all terminal string values from a nested structure (dicts/lists).
-
-    Args:
-        obj (dict, list, or str): A nested combination of dictionaries, lists, and string values.
-
-    Returns:
-        list of str: All string values found anywhere in the structure, in depth-first order.
-    """
-
-    res = []
-    if isinstance(obj, dict):
-        for value in obj.values():
-            res.extend(extract_categories(value))
-
-    elif isinstance(obj, list):
-        for item in obj:
-            res.extend(extract_categories(item))
-
-    elif isinstance(obj, str):
-        res.append(obj)
-
-    return res
-
-response = s3.get_object(Bucket=S3_BUCKET, Key=CATEGORIES_KEY)
-CATEGORIES_BODY = json.loads(response['Body'].read().decode("utf-8"))
-CATEGORIES = extract_categories(CATEGORIES_BODY)
-
-EXPENSES_PARENT_CATEGORY_KEY = "Expenses"
-NON_EXPENSES_PARENT_CATEGORY_KEY = "Non-Expenses"
-EXPENSES_CATEGORIES = extract_categories(CATEGORIES_BODY.get(EXPENSES_PARENT_CATEGORY_KEY, {}))
-NON_EXPENSES_CATEGORIES = extract_categories(CATEGORIES_BODY.get(NON_EXPENSES_PARENT_CATEGORY_KEY, {}))
-
-# existing issuers
-response = s3.list_objects_v2(Bucket=S3_BUCKET, Prefix=f"{STATEMENTS_FOLDER}/", Delimiter="/")
-EXISTING_ISSUERS = [prefix["Prefix"].split("/")[1] for prefix in response.get("CommonPrefixes", [])]
 
 # column names
 TRANSACTION_ID_COLUMN = "transaction_id"
@@ -94,6 +65,8 @@ GROUP_BY_COLUMN = "group_by"
 EDITING_NOT_ALLOWED_TEXT = "Editing is not allowed here! It breaks deduplication logic. 🤭"
 SELECTION_PROMPT = "To get started, make a selection."
 
+# note: CATEGORY_COLUMN config is added right before st.data_editor() is invoked
+# this is because it relies on user specific data
 column_configs = {
     TRANSACTION_ID_COLUMN: None,
 
@@ -121,12 +94,6 @@ column_configs = {
     ISSUER_COLUMN: st.column_config.TextColumn(
         label="Statement Issuer",
         disabled=True, 
-        width="medium"
-    ),
-
-    CATEGORY_COLUMN: st.column_config.SelectboxColumn(
-        label="Category",
-        options=CATEGORIES,
         width="medium"
     ),
 

@@ -1,9 +1,9 @@
 import time 
 import json
 import traceback
-import config as c 
 import streamlit as st
 import utils.helpers as h
+import config_general as c
 from datetime import datetime, timezone
 
 def show_upload():
@@ -20,7 +20,7 @@ def show_upload():
         st.markdown(f"To prevent data gaps, give me statements from :rainbow[{recommended_date}] or earlier!")
 
     file = st.file_uploader("Upload CSV File", type=["csv"], on_change=h.clear_issuer_selection, help=c.FILE_UPLOADER_HELP_TEXT)
-    issuer = st.selectbox("Select Issuer", c.EXISTING_ISSUERS, index=None, key="issuer")
+    issuer = st.selectbox("Select Issuer", st.session_state.EXISTING_ISSUERS, index=None, key="issuer")
 
     if file and issuer:
         if st.button("📤 Upload Statement"):

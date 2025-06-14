@@ -1,9 +1,8 @@
 import traceback
-import config as c
 import pandas as pd
 import streamlit as st
 import utils.helpers as h
-
+import config_general as c
 
 def show_categorize():
     # ensure master data is loaded
@@ -74,7 +73,7 @@ def show_categorize():
             )
             
             # issuer filter
-            filtered_issuers = h.create_multiselect_filter(prompt_text="Filter by statement issuer", options=c.EXISTING_ISSUERS, default=c.EXISTING_ISSUERS)
+            filtered_issuers = h.create_multiselect_filter(prompt_text="Filter by statement issuer", options=st.session_state.EXISTING_ISSUERS, default=st.session_state.EXISTING_ISSUERS)
 
             # category filter            
             st.divider()
@@ -87,7 +86,7 @@ def show_categorize():
             # otherwise, let user decide which categories to review
             filtered_categories = h.create_multiselect_filter(
                 prompt_text = "Filter by category", 
-                options = c.CATEGORIES, 
+                options = st.session_state.CATEGORIES, 
                 # if there are no more uncategorized transactions, except for those marked as "TBD", then default to showing those.
                 default = ["TBD"] if uncategorized.empty and not(TBD.empty) else None,
                 disabled = show_uncategorized_only,
@@ -111,6 +110,14 @@ def show_categorize():
             st.text("You can still edit existing categories below.")
         else:
             st.markdown(f":rainbow[{len(uncategorized) + len(TBD)}/{len(master)}] expenses are uncategorized!")
+
+        # category column config is handled separately
+        # since it relies on user specific data
+        c.column_configs[c.CATEGORY_COLUMN] = st.column_config.SelectboxColumn(
+            label="Category",
+            width="medium",
+            options=st.session_state.CATEGORIES
+        )
 
         edited = st.data_editor(
             display_df,
