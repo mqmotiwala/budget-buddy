@@ -7,6 +7,7 @@ import streamlit as st
 import config_general as c
 
 from io import BytesIO
+from utils.user import User
 from datetime import date, timedelta
 from botocore.exceptions import ClientError
 from streamlit_oauth import OAuth2Component, StreamlitOauthError
@@ -281,25 +282,24 @@ def get_auth():
             redirect_uri=c.REDIRECT_URI,
             scope="openid email profile",
             key="google",
-            extras_params={"prompt": "consent", "access_type": "offline"},
+            extras_params={"access_type": "offline", "prompt": "select_account"},
             use_container_width=True,
             pkce='S256',
         )
         
         if result:
+            token = result["token"]
+            st.session_state["token"] = token
+
             # decode the id_token jwt and get the user's email address
             id_token = result["token"]["id_token"]
-            st.session_state["token"] = result["token"]
-            
-            # verify the signature is an optional step for security
             payload = id_token.split(".")[1]
             # add padding to the payload if needed
             payload += "=" * (-len(payload) % 4)
             payload = json.loads(base64.b64decode(payload))
 
-            st.session_state["auth"] = payload.get("email")
-            st.session_state["first_name"] = payload.get("given_name")
-            st.session_state["last_name"] = payload.get("family_name")
+            st.session_state["user"] = User(payload=payload)
+            st.session_state["auth"] = st.session_state.user.email
 
             # rerun the app to reflect the new state
             st.rerun()

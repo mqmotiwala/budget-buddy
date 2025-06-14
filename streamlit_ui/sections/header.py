@@ -7,7 +7,7 @@ def show_header():
         if st.button("Logout"):
             h.logout()
     
-    st.title(f"👋 Hi {st.session_state.first_name}! I'm your Budget Buddy")
+    st.title(f"👋 Hi {st.session_state.user.first_name}! I'm your Budget Buddy")
 
     subtitle = """Hand me your statements and I'll help you gain insights into where your money goes.  
     Lets make tracking your finances *simple and stress-free.*
