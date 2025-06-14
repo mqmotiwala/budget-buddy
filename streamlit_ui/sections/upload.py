@@ -28,7 +28,7 @@ def show_upload():
             upload_ms = int(upload_s) * 1000 # used to check against Lambda logs for successful completion
             formatted_time = datetime.fromtimestamp(upload_s, tz=timezone.utc).strftime("%Y-%m-%dT%H-%M-%S-%f")
 
-            new_statement_key = f"{c.STATEMENTS_FOLDER}/{issuer}/{issuer}_statement_{formatted_time}.csv"
+            new_statement_key = f"{st.session_state.STATEMENTS_FOLDER}/{issuer}/{issuer}_statement_{formatted_time}.csv"
 
             with st.status("Uploading to S3...", expanded=True) as status:
                 try:
