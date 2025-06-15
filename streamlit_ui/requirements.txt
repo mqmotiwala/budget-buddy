@@ -3,3 +3,4 @@ boto3
 pandas
 plotly
 streamlit_oauth 
+streamlit_player
