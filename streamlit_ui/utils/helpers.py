@@ -277,7 +277,7 @@ def get_auth():
         # create a button to start the OAuth2 flow
         oauth2 = OAuth2Component(c.CLIENT_ID, c.CLIENT_SECRET, c.AUTHORIZE_ENDPOINT, c.TOKEN_ENDPOINT, c.TOKEN_ENDPOINT, c.REVOKE_ENDPOINT)
         result = oauth2.authorize_button(
-            name="Continue with Google",
+            name="Get Started",
             icon="https://www.google.com.tw/favicon.ico",
             redirect_uri=c.REDIRECT_URI,
             scope="openid email profile",

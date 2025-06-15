@@ -49,15 +49,22 @@ PREFERRED_UI_DATE_FORMAT_MOMENTJS = "dddd, MMMM DD, YYYY"
 PREFERRED_UI_DATE_FORMAT_STRFTIME = "%A, %B %d, %Y"
 FILTER_PLACEHOLDER_TEXT = "No filter is applied when there is no input."
 FILE_UPLOADER_HELP_TEXT = "Your privacy is important to us. Statements uploaded remain encrypted at all times."
-STREAMLIT_PAGE_CONFIG = {
+
+# page configs
+BUDGET_BUDDY_ICON = "🤓"
+BUDGET_BUDDY_COLOR = "#EFB60C" # same as primaryColor in config.toml
+STREAMLIT_GENERAL_PAGE_CONFIG = {
     "page_title": "Budget Buddy",
-    "page_icon": "🤓",
+    "page_icon": BUDGET_BUDDY_ICON,
     "layout": "wide",
     "initial_sidebar_state": "auto",
     "menu_items": {
         "Report a Bug": "mailto:mqmotiwala@gmail.com"
     }
 }
+
+STREAMLIT_LANDING_PAGE_CONFIG = STREAMLIT_GENERAL_PAGE_CONFIG.copy()
+STREAMLIT_LANDING_PAGE_CONFIG["layout"] = "centered"
 
 # column names
 TRANSACTION_ID_COLUMN = "transaction_id"

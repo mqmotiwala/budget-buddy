@@ -1,22 +1,19 @@
 import streamlit as st
 import utils.helpers as h
+import config_general as c
+import utils.css as css
+from streamlit_player import st_player
 
 def show_landing():
-    st.title("👋 Hi! I'm your Budget Buddy")
-    subtitle = "Lets make tracking your finances *simple and stress-free.*"
-    st.markdown(subtitle)
-
+    st.title(f"👋 Hi! I'm your Budget Buddy {c.BUDGET_BUDDY_ICON}")
+    css.markdown(f"##### Together, we'll make tracking your finances {css.highlight("simple and stress free", tilt=1.5)}")
+    
+    explanation_text = f"""
+    I'll help you bring all your accounts together into one clear view,  
+    so you can keep tabs on your finances and get back to doing the things you *actually* enjoy.
+    """
+    
+    css.markdown(f"{(explanation_text)}")
+    
+    st_player("https://www.youtube.com/watch?v=fEscsUoQc70")
     h.get_auth()
-
-    st.divider()
-
-    st.subheader("💡 Frequently Asked Questions")
-
-    with st.expander("What is Budget Buddy?"):
-        st.write("Budget Buddy is a personal finance assistant that helps you analyze your spending by uploading your bank statements. Think of it as Mint, but simpler and more focused on clarity.")
-
-    with st.expander("Is my data secure?"):
-        st.write("Yes. Your data is processed in memory and never shared. In the future, we'll offer encrypted cloud sync with full user control.")
-
-
-

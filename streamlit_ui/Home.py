@@ -4,18 +4,20 @@ import utils.helpers as h
 import config_user as u
 import config_general as c
 
+from sections.faqs import show_faqs 
 from sections.header import show_header 
 from sections.upload import show_upload
 from sections.landing import show_landing 
 from sections.analytics import show_analytics
 from sections.categorize import show_categorize
 
-st.set_page_config(**c.STREAMLIT_PAGE_CONFIG)
-
 if "auth" not in st.session_state:
+    st.set_page_config(**c.STREAMLIT_LANDING_PAGE_CONFIG)
     show_landing()
+    show_faqs()
 
 else:
+    st.set_page_config(**c.STREAMLIT_GENERAL_PAGE_CONFIG)
     u.load_user_config()
 
     # initialize master data for session, if needed
