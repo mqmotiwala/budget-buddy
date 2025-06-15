@@ -39,3 +39,29 @@ def divider(color=c.BUDGET_BUDDY_COLOR, thickness="1px", margin="1.5em 0"):
 
     html_text = f"<hr style='border: none; border-top: {thickness} solid {color}; margin: {margin};' />"
     return markdown(html_text)
+
+def underline(text, color=c.BUDGET_BUDDY_COLOR, thickness="2px", offset="2px", style="solid"):
+    """
+    Returns an HTML <span> with an underline styling, defaults to using text-decoration-style: solid.
+    """
+
+    if not style in ["solid", "double", "dotted", "dashed", "wavy"]:
+        raise ValueError("Invalid style")
+    
+    return (
+        f"<span style='"
+        f"text-decoration: underline; "
+        f"text-decoration-color: {color}; "
+        f"text-decoration-style: {style}; "
+        f"text-underline-offset: {offset}; "
+        f"text-decoration-thickness: {thickness};"
+        f"'>{text}</span>"
+    )
+
+def empty_space():
+    """
+    Returns an HTML <span> with a squiggly underline using text-decoration-style: wavy.
+    """
+
+    st.markdown("")
+    st.markdown("")

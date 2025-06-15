@@ -55,3 +55,5 @@ def show_faqs():
                 [{css.highlight("Instagram")}](https://www.instagram.com/m_mufi)
             """
             css.markdown(answer)
+
+    css.empty_space()

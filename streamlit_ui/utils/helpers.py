@@ -1,5 +1,6 @@
 import time
 import json
+import random
 import base64
 import traceback
 import pandas as pd
@@ -281,7 +282,8 @@ def get_auth():
             icon="https://www.google.com.tw/favicon.ico",
             redirect_uri=c.REDIRECT_URI,
             scope="openid email profile",
-            key="google",
+            # streamlit will raise an error if elements are duplicated without unique keys 
+            key=f"google_{random.randint(100000, 999999)}",
             extras_params={"access_type": "offline", "prompt": "select_account"},
             use_container_width=True,
             pkce='S256',

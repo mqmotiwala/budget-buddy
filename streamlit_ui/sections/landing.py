@@ -10,10 +10,9 @@ def show_landing():
     
     explanation_text = f"""
     I'll help you bring all your accounts together into one clear view,  
-    so you can keep tabs on your finances and get back to doing the things you *actually* enjoy.
+    so you can keep tabs on your finances and get back to doing the things you *{css.underline("actually")}* enjoy.
     """
     
     css.markdown(f"{(explanation_text)}")
     
     st_player("https://www.youtube.com/watch?v=fEscsUoQc70")
-    h.get_auth()
