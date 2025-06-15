@@ -15,10 +15,10 @@ from sections.categorize import show_categorize
 if "auth" not in st.session_state:
     st.set_page_config(**c.STREAMLIT_LANDING_PAGE_CONFIG)
     show_landing()
-    h.get_auth()
+    h.get_auth(unique_key = "1")
     show_features()
     show_faqs()
-    h.get_auth()
+    h.get_auth(unique_key = "2")
 
 else:
     u.load_user_config()

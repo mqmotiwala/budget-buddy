@@ -1,6 +1,5 @@
 import time
 import json
-import random
 import base64
 import traceback
 import pandas as pd
@@ -269,9 +268,21 @@ def extract_categories(obj):
 
     return res
 
-def get_auth():
+def get_auth(unique_key=None):
     """
-    Get the authentication token for Streamlit session state.
+    Displays an OAuth2 login button using the provided client configuration
+    On successful login, gets an authentication token for Streamlit session state.
+
+    Parameters:
+        unique_key (str or None): Optional. 
+        A unique key to prevent component duplication errors in Streamlit. 
+        
+        If not provided, a random key will be generated internally.
+        But the generation is a function of element type and parameters, 
+        so if this function is invoked multiple times, it'll produce a
+        "multiple component_instance elements with the same auto-generated ID" error.
+
+        So, pass unique_key argument to avoid this
     """
 
     try:
@@ -283,7 +294,7 @@ def get_auth():
             redirect_uri=c.REDIRECT_URI,
             scope="openid email profile",
             # streamlit will raise an error if elements are duplicated without unique keys 
-            key=f"google_{random.randint(100000, 999999)}",
+            key=unique_key,
             extras_params={"access_type": "offline", "prompt": "select_account"},
             use_container_width=True,
             pkce='S256',
@@ -300,6 +311,7 @@ def get_auth():
             payload += "=" * (-len(payload) % 4)
             payload = json.loads(base64.b64decode(payload))
 
+            # instantiate User object
             st.session_state["user"] = User(payload=payload)
             st.session_state["auth"] = st.session_state.user.email
 
