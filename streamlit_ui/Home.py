@@ -17,7 +17,6 @@ if "auth" not in st.session_state:
     show_faqs()
 
 else:
-    st.set_page_config(**c.STREAMLIT_GENERAL_PAGE_CONFIG)
     u.load_user_config()
 
     # initialize master data for session, if needed
@@ -26,6 +25,9 @@ else:
     if "master" not in st.session_state:
         st.session_state.master = h.load_master()
 
+    # setting page config here as opposed to at the top of the conditional block
+    # allows Streamlit to switch between centered -> wide layout view more seamlessly
+    st.set_page_config(**c.STREAMLIT_GENERAL_PAGE_CONFIG)
     show_header()
     show_upload()
     show_categorize()
