@@ -2,16 +2,16 @@ import time
 import json
 import random
 import traceback
+import config as c
 import streamlit as st
 import utils.helpers as h
-import config_general as c
 from datetime import datetime, timezone
 
 def show_upload():
     # ensure master data is loaded
-    if "master" not in st.session_state:
-        st.session_state.master = h.load_master()
-    master = st.session_state.master
+    if not hasattr(st.session_state.user, "master"):
+        st.session_state.user.load_master()
+    master = st.session_state.user.master
 
     st.header("🗂️ Upload Statements")
     
@@ -21,14 +21,14 @@ def show_upload():
         st.markdown(f"To prevent data gaps, give me statements from :rainbow[{recommended_date}] or earlier!")
 
     file = st.file_uploader("Upload CSV File", type=["csv"], on_change=h.clear_issuer_selection, help=c.FILE_UPLOADER_HELP_TEXT)
-    issuer = st.selectbox("Select Issuer", st.session_state.EXISTING_ISSUERS, index=None, key="issuer")
+    issuer = st.selectbox("Select Issuer", st.session_state.user.EXISTING_ISSUERS, index=None, key="issuer")
 
     if file and issuer:
         if st.button("📤 Upload Statement"):
             upload_s = time.time()
             formatted_time = datetime.fromtimestamp(upload_s, tz=timezone.utc).strftime("%Y-%m-%dT%H-%M-%S-%f")
 
-            new_statement_key = f"{st.session_state.STATEMENTS_FOLDER}/{issuer}/{issuer}_statement_{formatted_time}.csv"
+            new_statement_key = f"{st.session_state.user.STATEMENTS_FOLDER}/{issuer}/{issuer}_statement_{formatted_time}.csv"
 
             with st.status("Uploading to cloud...", expanded=True) as status:
                 try:
@@ -79,4 +79,4 @@ def show_upload():
                 status.update(label="done!", state="complete", expanded=False)
 
                 # update master contents
-                st.session_state.master = h.load_master()
+                st.session_state.user.load_master()

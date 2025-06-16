@@ -1,6 +1,5 @@
+import config as c
 import streamlit as st
-import utils.helpers as h
-import config_general as c
 import utils.css as css
 from streamlit_player import st_player
 

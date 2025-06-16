@@ -1,16 +1,17 @@
 import traceback
+import config as c
 import pandas as pd
 import streamlit as st
+import utils.css as css
 import utils.helpers as h
-import config_general as c
 
 def show_categorize():
     # ensure master data is loaded
-    if "master" not in st.session_state:
-        st.session_state.master = h.load_master()
-    master = st.session_state.master
+    if not hasattr(st.session_state.user, "master"):
+        st.session_state.user.load_master()
+    master = st.session_state.user.master
 
-    st.divider()
+    css.divider()
     st.header("🏷️Categorize Expenses")
 
     if master is None or master.empty:
@@ -73,7 +74,7 @@ def show_categorize():
             )
             
             # issuer filter
-            filtered_issuers = h.create_multiselect_filter(prompt_text="Filter by statement issuer", options=st.session_state.EXISTING_ISSUERS, default=st.session_state.EXISTING_ISSUERS)
+            filtered_issuers = h.create_multiselect_filter(prompt_text="Filter by statement issuer", options=st.session_state.user.EXISTING_ISSUERS, default=st.session_state.user.EXISTING_ISSUERS)
 
             # category filter            
             st.divider()
@@ -86,7 +87,7 @@ def show_categorize():
             # otherwise, let user decide which categories to review
             filtered_categories = h.create_multiselect_filter(
                 prompt_text = "Filter by category", 
-                options = st.session_state.CATEGORIES, 
+                options = st.session_state.user.CATEGORIES, 
                 # if there are no more uncategorized transactions, except for those marked as "TBD", then default to showing those.
                 default = ["TBD"] if uncategorized.empty and not(TBD.empty) else None,
                 disabled = show_uncategorized_only,
@@ -100,7 +101,7 @@ def show_categorize():
         description_filter = master[c.DESCRIPTION_COLUMN].str.contains(description_filter_setting, case=False, na=False) if description_filter_setting else True
         amount_filter = master[c.AMOUNT_COLUMN].between(min_amount, max_amount)
         issuer_filter = master[c.ISSUER_COLUMN].isin(filtered_issuers) if filtered_issuers else True
-        category_filter = master[c.CATEGORY_COLUMN].isna() if show_uncategorized_only else master[c.CATEGORY_COLUMN].isin(filtered_categories) if filtered_categories and len(filtered_categories) != len(c.CATEGORIES) else True
+        category_filter = master[c.CATEGORY_COLUMN].isna() if show_uncategorized_only else master[c.CATEGORY_COLUMN].isin(filtered_categories) if filtered_categories and len(filtered_categories) != len(st.session_state.user.CATEGORIES) else True
         notes_filter = master[c.NOTES_COLUMN].str.contains(notes_filter_setting, case=False, na=False) if notes_filter_setting else True
 
         display_df = master[date_filter & description_filter & amount_filter & issuer_filter & category_filter & notes_filter]
@@ -116,7 +117,7 @@ def show_categorize():
         c.column_configs[c.CATEGORY_COLUMN] = st.column_config.SelectboxColumn(
             label="Category",
             width="medium",
-            options=st.session_state.CATEGORIES
+            options=st.session_state.user.CATEGORIES
         )
 
         edited = st.data_editor(
@@ -133,12 +134,12 @@ def show_categorize():
                 master.loc[edited.index, col] = edited[col]
 
             # upload updated master to S3
-            h.update_master(master)
+            st.session_state.user.update_master(master)
             
             st.success("Categorized data synced to cloud.")
 
             # force reload master data
-            st.session_state.master = h.load_master()
+            st.session_state.user.load_master()
             st.rerun()
 
     except Exception as e:

@@ -1,6 +1,6 @@
+import config as c
 import streamlit as st
 import utils.css as css
-import config_general as c
 
 def show_features():
     css.divider()

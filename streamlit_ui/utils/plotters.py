@@ -1,7 +1,7 @@
+import config as c
 import altair as alt
 import streamlit as st
 import utils.helpers as h
-import config_general as c
 import plotly.graph_objects as go
 from utils.helpers import hex_to_rgba
 
@@ -22,8 +22,8 @@ def sankey(df):
 
     # net values for primary nodes
     primary_nodes_net_values = {}
-    for primary_node in st.session_state.CATEGORIES_BODY.keys():
-        primary_node_categories = h.extract_categories(st.session_state.CATEGORIES_BODY[primary_node])
+    for primary_node in st.session_state.user.CATEGORIES_BODY.keys():
+        primary_node_categories = h.extract_categories(st.session_state.user.CATEGORIES_BODY[primary_node])
         primary_nodes_net_values[primary_node] = sum(totals.get(category, 0) for category in primary_node_categories)
 
     # Determine flow delta
@@ -39,7 +39,7 @@ def sankey(df):
     }
 
     # Build labeled nodes with currency (includes both config + dynamic)
-    raw_nodes = st.session_state.CATEGORIES + list(CUSTOM_NODES.keys())
+    raw_nodes = st.session_state.user.CATEGORIES + list(CUSTOM_NODES.keys())
     nodes = []
     node_values = []
 
@@ -67,7 +67,7 @@ def sankey(df):
     value.append(primary_nodes_net_values["Savings"])
 
     # Expenses → each expense category
-    for category in st.session_state.EXPENSES_CATEGORIES:
+    for category in st.session_state.user.EXPENSES_CATEGORIES:
         source.append(node_indices["Expenses"])
         target.append(node_indices[category])
         value.append(totals.get(category, 0))

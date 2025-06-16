@@ -1,16 +1,9 @@
 import time
-import json
-import base64
 import traceback
-import pandas as pd
+import config as c
 import streamlit as st
-import config_general as c
 
-from io import BytesIO
-from utils.user import User
 from datetime import date, timedelta
-from botocore.exceptions import ClientError
-from streamlit_oauth import OAuth2Component, StreamlitOauthError
 
 LAMBDA_TIMEOUT = 30  # seconds
 POLL_INTERVAL = 1    # seconds
@@ -206,43 +199,6 @@ def hex_to_rgba(hex_color, alpha=0.1):
 
     return f"rgba({r},{g},{b},{alpha})"
 
-def load_master():
-    master = None
-
-    # load master data
-    try:
-        response = c.s3.get_object(Bucket=c.S3_BUCKET, Key=st.session_state.MASTER_KEY)
-        raw = response["Body"].read()
-        buffer = BytesIO(raw)
-
-        master = pd.read_parquet(buffer)
-        master = master.sort_values(by=c.DATE_COLUMN, ascending=False)
-
-    except ClientError as e:
-        if e.response['Error']['Code'] == 'NoSuchKey':
-            # master doesn't exist, skip loading
-            pass
-
-    return master
-
-def update_master(master):
-    """
-    Update master in S3 with the provided DataFrame.
-    
-    Args:
-        master (pd.DataFrame): The DataFrame to upload as the new master.
-    """
-    # Save to Parquet in memory
-    out_buffer = BytesIO()
-    master.to_parquet(out_buffer, index=False, compression='snappy')
-
-    # Upload updated master file
-    c.s3.put_object(
-        Bucket=c.S3_BUCKET,
-        Key=f"{st.session_state.MASTER_KEY}",
-        Body=out_buffer.getvalue()
-    )
-
 def extract_categories(obj):
     """
     Recursively extract all terminal string values from a nested structure (dicts/lists).
@@ -267,70 +223,3 @@ def extract_categories(obj):
         res.append(obj)
 
     return res
-
-def get_auth(unique_key=None):
-    """
-    Displays an OAuth2 login button using the provided client configuration
-    On successful login, gets an authentication token for Streamlit session state.
-
-    Parameters:
-        unique_key (str or None): Optional. 
-        A unique key to prevent component duplication errors in Streamlit. 
-        
-        If not provided, a random key will be generated internally.
-        But the generation is a function of element type and parameters, 
-        so if this function is invoked multiple times, it'll produce a
-        "multiple component_instance elements with the same auto-generated ID" error.
-
-        So, pass unique_key argument to avoid this
-    """
-
-    try:
-        # create a button to start the OAuth2 flow
-        oauth2 = OAuth2Component(c.CLIENT_ID, c.CLIENT_SECRET, c.AUTHORIZE_ENDPOINT, c.TOKEN_ENDPOINT, c.TOKEN_ENDPOINT, c.REVOKE_ENDPOINT)
-        result = oauth2.authorize_button(
-            name="Get Started",
-            icon="https://www.google.com.tw/favicon.ico",
-            redirect_uri=c.REDIRECT_URI,
-            scope="openid email profile",
-            # streamlit will raise an error if elements are duplicated without unique keys 
-            key=unique_key,
-            extras_params={"access_type": "offline", "prompt": "select_account"},
-            use_container_width=True,
-            pkce='S256',
-        )
-        
-        if result:
-            token = result["token"]
-            st.session_state["token"] = token
-
-            # decode the id_token jwt and get the user's email address
-            id_token = result["token"]["id_token"]
-            payload = id_token.split(".")[1]
-            # add padding to the payload if needed
-            payload += "=" * (-len(payload) % 4)
-            payload = json.loads(base64.b64decode(payload))
-
-            # instantiate User object
-            st.session_state["user"] = User(payload=payload)
-            st.session_state["auth"] = st.session_state.user.email
-
-            # rerun the app to reflect the new state
-            st.rerun()
-
-    except StreamlitOauthError as e:
-        # user cancelled the OAuth2 flow
-        pass
-
-    except Exception as e:
-        st.error(f"An error occurred during authentication: {e}")
-        st.text("Detailed traceback:")
-        st.code(traceback.format_exc())
-        st.stop()
-
-def logout():
-    # effectively resets the session
-    st.session_state.clear()
-
-    # rerun the app to reflect the new state
-    st.rerun()
