@@ -1,5 +1,5 @@
+import config as c
 import streamlit as st
-import config_general as c
 
 def highlight(text, background=c.BUDGET_BUDDY_COLOR, color="black", font_weight="normal", font_size="inherit", tilt=0):
     """

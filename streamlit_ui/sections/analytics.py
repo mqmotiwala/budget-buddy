@@ -1,20 +1,21 @@
+import config as c
 import pandas as pd
 import streamlit as st
+import utils.css as css
 import utils.helpers as h
 import utils.plotters as p
-import config_general as c
 from datetime import timedelta as td
 
 def show_analytics():
     # ensure master data is loaded
-    if "master" not in st.session_state:
-        st.session_state.master = h.load_master()
-    master = st.session_state.master
+    if not hasattr(st.session_state.user, "master"):
+        st.session_state.user.load_master()
+    master = st.session_state.user.master
 
     if master is None or master.empty:
         return 
     
-    st.divider()
+    css.divider()
     st.header("💡Review Analytics")
 
     time_range = st.pills(
@@ -58,7 +59,7 @@ def show_analytics():
         analyze = master[
             master[c.DATE_COLUMN].between(start, end) &
             master[c.CATEGORY_COLUMN].notna() &
-            ~master[c.CATEGORY_COLUMN].isin(st.session_state.NON_EXPENSES_CATEGORIES)
+            ~master[c.CATEGORY_COLUMN].isin(st.session_state.user.NON_EXPENSES_CATEGORIES)
         ].copy()
 
         st.markdown(f"Analyzing :rainbow[{start.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)} - {end.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)}]")
@@ -70,7 +71,7 @@ def show_analytics():
         st.markdown("##### *Deep Dives by Category*")
         filtered_categories = st.multiselect(
             label = "Filter by category",
-            options = [cat for cat in st.session_state.CATEGORIES if cat not in st.session_state.NON_EXPENSES_CATEGORIES], 
+            options = [cat for cat in st.session_state.user.CATEGORIES if cat not in st.session_state.user.NON_EXPENSES_CATEGORIES], 
             default = None,
             placeholder = c.SELECTION_PROMPT,
             label_visibility ='collapsed'

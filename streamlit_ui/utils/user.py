@@ -1,6 +1,13 @@
+import io
+import json
 import time
 import boto3
-import config_general as c
+import config as c
+import pandas as pd
+import utils.helpers as h
+
+from io import BytesIO
+from botocore.exceptions import ClientError
 
 USERS_TABLE = "users-budget-buddy"
 
@@ -20,7 +27,9 @@ class User:
     the User class variable contains the src table for storing user data 
     
     for Streamlit apps, this object is loaded to st.session_state
-    and used as the entry point for invoking user-related methods
+    and used as the entry point for:
+        - invoking user-related methods, or
+        - accessing user-specific variables
     """
 
     table = ddb.Table(USERS_TABLE)
@@ -35,6 +44,8 @@ class User:
         else:
             self.get_user_data()
             self.update_last_login()
+
+        self.load_budgetbuddy_user_variables()
 
     def is_new_user(self):
         response = self.table.get_item(Key={"user_id": self.user_id})
@@ -88,4 +99,76 @@ class User:
                 ":ts": self.last_login,
                 ":inc": 1
             }
+        )
+
+    # ---- project specific logic ----
+
+    def load_budgetbuddy_user_variables(self):
+        """
+        this method contains only project specific user variables
+        """
+
+        self.ROOT_FOLDER = self.email
+
+        self.STATEMENTS_FOLDER = f"{self.ROOT_FOLDER}/statements"
+        self.MASTER_KEY = f"{self.ROOT_FOLDER}/categorized_expenses.parquet"
+        self.CATEGORIES_KEY = f"{self.ROOT_FOLDER}/categories.json"
+
+        try:
+            response = c.s3.get_object(Bucket=c.S3_BUCKET, Key=self.CATEGORIES_KEY)
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'NoSuchKey':
+                # user has no defined categories
+                # initialize a default response object that will pass downstream commands
+                response = {"Body": io.BytesIO(b"{}")}
+
+        self.CATEGORIES_BODY = json.loads(response['Body'].read().decode("utf-8"))
+        self.CATEGORIES = h.extract_categories(self.CATEGORIES_BODY)
+        self.EXPENSES_CATEGORIES = h.extract_categories(self.CATEGORIES_BODY.get(c.EXPENSES_PARENT_CATEGORY_KEY, {}))
+        self.NON_EXPENSES_CATEGORIES = h.extract_categories(self.CATEGORIES_BODY.get(c.NON_EXPENSES_PARENT_CATEGORY_KEY, {}))
+
+        # existing issuers
+        response = c.s3.list_objects_v2(Bucket=c.S3_BUCKET, Prefix=f"{self.STATEMENTS_FOLDER}/", Delimiter="/")
+
+        # CommonPrefixes structure looks like: 
+        # [{"Prefix":"mqmotiwala@gmail.com/statements/amazon/"}], so
+        # .split('/')[-1] is an empty string
+        # .split('/')[-2] is the statement issuer
+        self.EXISTING_ISSUERS = [prefix["Prefix"].split("/")[-2] for prefix in response.get("CommonPrefixes", [])]
+
+    def load_master(self):
+        master = None
+
+        # load master data
+        try:
+            response = c.s3.get_object(Bucket=c.S3_BUCKET, Key=self.MASTER_KEY)
+            raw = response["Body"].read()
+            buffer = BytesIO(raw)
+
+            master = pd.read_parquet(buffer)
+            master = master.sort_values(by=c.DATE_COLUMN, ascending=False)
+
+        except ClientError as e:
+            if e.response['Error']['Code'] == 'NoSuchKey':
+                # master doesn't exist, skip loading
+                pass
+
+        self.master = master
+
+    def update_master(self, master):
+        """
+        Update master in S3 with the provided DataFrame.
+        
+        Args:
+            master (pd.DataFrame): The DataFrame to upload as the new master.
+        """
+        # Save to Parquet in memory
+        out_buffer = BytesIO()
+        master.to_parquet(out_buffer, index=False, compression='snappy')
+
+        # Upload updated master file
+        c.s3.put_object(
+            Bucket=c.S3_BUCKET,
+            Key=f"{self.MASTER_KEY}",
+            Body=out_buffer.getvalue()
         )
