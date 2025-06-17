@@ -23,7 +23,7 @@ def show_features():
             *and* dive deep when you need to."""
         )
 
-        st.image(f"{c.ASSETS_PATH}/feature_001.png")
+        st.image(f"{c.ASSETS_PATH}/feature_002.png")
 
     css.empty_space()
 
@@ -32,4 +32,4 @@ def show_features():
         css.markdown(
             f"""Everyone tracks things differently. Categorize your expenses to match *{css.underline("you")}*."""    
         )
-        st.image(f"{c.ASSETS_PATH}/feature_001.png")
+        st.image(f"{c.ASSETS_PATH}/feature_003.png")
