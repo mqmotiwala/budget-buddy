@@ -2,6 +2,7 @@
 import config as c
 import streamlit as st
 import utils.auth as a
+import utils.css as css
 
 from sections.faqs import show_faqs 
 from sections.header import show_header 
@@ -13,6 +14,8 @@ from sections.categorize import show_categorize
 
 if "auth" not in st.session_state:
     st.set_page_config(**c.STREAMLIT_LANDING_PAGE_CONFIG)
+    css.remove_streamlit_menu()
+
     show_landing()
     a.get_auth(unique_key=1)
     show_features()
@@ -29,6 +32,8 @@ else:
     # setting page config here as opposed to at the top of the conditional block
     # allows Streamlit to switch between centered -> wide layout view more seamlessly
     st.set_page_config(**c.STREAMLIT_GENERAL_PAGE_CONFIG)
+    css.remove_streamlit_menu()
+
     show_header()
     show_upload()
     show_categorize()

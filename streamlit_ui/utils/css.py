@@ -65,3 +65,15 @@ def empty_space():
 
     st.markdown("")
     st.markdown("")
+
+def remove_streamlit_menu():
+    """
+    Removes the Streamlit menu items
+    """
+    style_text = """
+        <style>
+            #MainMenu, footer, header {visibility: hidden;}
+        </style>
+    """
+    st.markdown(style_text, unsafe_allow_html=True)
+
