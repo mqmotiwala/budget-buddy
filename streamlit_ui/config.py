@@ -62,10 +62,7 @@ STREAMLIT_GENERAL_PAGE_CONFIG = {
     "page_title": "Budget Buddy",
     "page_icon": BUDGET_BUDDY_ICON,
     "layout": "wide",
-    "initial_sidebar_state": "auto",
-    "menu_items": {
-        "Report a Bug": "mailto:mqmotiwala@gmail.com"
-    }
+    "initial_sidebar_state": "auto"
 }
 
 STREAMLIT_LANDING_PAGE_CONFIG = STREAMLIT_GENERAL_PAGE_CONFIG.copy()

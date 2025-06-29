@@ -69,6 +69,9 @@ def empty_space():
 def remove_streamlit_menu():
     """
     Removes the Streamlit menu items
+
+    Note: this function has low utility because Streamlit offers a native way of achieving this effect by setting toolbarMode value in config.toml
+    See docs: https://docs.streamlit.io/develop/api-reference/configuration/config.toml
     """
     style_text = """
         <style>
