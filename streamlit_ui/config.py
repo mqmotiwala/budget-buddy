@@ -48,7 +48,7 @@ NON_EXPENSES_PARENT_CATEGORY_KEY = "Non-Expenses"
 PREFERRED_UI_DATE_FORMAT_MOMENTJS = "dddd, MMMM DD, YYYY"
 PREFERRED_UI_DATE_FORMAT_STRFTIME = "%A, %B %d, %Y"
 FILTER_PLACEHOLDER_TEXT = "No filter is applied when there is no input."
-FILE_UPLOADER_HELP_TEXT = "Your privacy is important to us. Statements uploaded remain encrypted at all times."
+FILE_UPLOADER_HELP_TEXT = "Statements uploaded remain encrypted at all times."
 ASSETS_PATH = "streamlit_ui/assets"
 
 # page configs
