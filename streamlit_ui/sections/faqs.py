@@ -27,10 +27,10 @@ def show_faqs():
             """
             st.write(answer)
             
-        with st.expander("Is there a free trial?"):
+        with st.expander("Is there a free tier?"):
             answer = """
             Yes, you can try Budget Buddy for free and you don't even need a credit card!  
-            Custom expense categories are excluded from the free trial and you're limited to only a handful of statements.
+            Custom expense categories are excluded from the free tier and you can process only a handful of statements.
             """
             st.write(answer)
 

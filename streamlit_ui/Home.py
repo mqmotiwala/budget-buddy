@@ -11,6 +11,7 @@ from sections.landing import show_landing
 from sections.features import show_features 
 from sections.analytics import show_analytics
 from sections.categorize import show_categorize
+from sections.free_tier import show_free_tier_notice
 
 if "auth" not in st.session_state:
     st.set_page_config(**c.STREAMLIT_LANDING_PAGE_CONFIG)
@@ -32,7 +33,10 @@ else:
     # setting page config here as opposed to at the top of the conditional block
     # allows Streamlit to switch between centered -> wide layout view more seamlessly
     st.set_page_config(**c.STREAMLIT_GENERAL_PAGE_CONFIG)
-    css.remove_streamlit_menu()
+    # css.remove_streamlit_menu()
+
+    if not st.session_state.user.is_premium: 
+        show_free_tier_notice()
 
     show_header()
     show_upload()
