@@ -88,6 +88,21 @@ class User:
         for k, v in item.items():
             setattr(self, k, v)
 
+    def get_user_attribute(self, attr_name):
+        """Fetch a single attribute from DynamoDB."""
+        response = self.table.get_item(
+            Key={"user_id": self.user_id},
+            ProjectionExpression=attr_name
+        )
+
+        attr = response.get("Item", {}).get(attr_name)
+
+        # attach to self
+        # useful for repeat access of attr without using more DynamoDB read-capacity units
+        setattr(self, attr_name, attr)
+
+        return attr
+
     def update_last_login(self):
         """Updates the last login timestamp."""
         self.last_login = int(time.time())
@@ -102,6 +117,17 @@ class User:
         )
 
     # ---- project specific logic ----
+
+    def update_num_uploads(self):
+        """Updates the number of statements uploaded."""
+
+        self.table.update_item(
+            Key={"user_id": self.user_id},
+            UpdateExpression="ADD num_uploads :inc",
+            ExpressionAttributeValues={
+                ":inc": 1
+            }
+        )
 
     def load_budgetbuddy_user_variables(self):
         """

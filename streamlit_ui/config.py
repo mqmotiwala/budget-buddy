@@ -33,6 +33,10 @@ sf = boto3.client(
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     region_name=AWS_REGION
 )
+
+# free/premiun tier settings
+MAX_FREE_STATEMENT_UPLOADS = 10
+UPGRADE_NOTICE_TEXT = f"You can only process {MAX_FREE_STATEMENT_UPLOADS} statements on the free tier. Upgrade to premium."
     
 # Google OAuth2Component instance
 CLIENT_ID = st.secrets["oauth"]["GOOGLE_CLIENT_ID"]
