@@ -35,7 +35,7 @@ sf = boto3.client(
 )
 
 # free/premiun tier settings
-MAX_FREE_STATEMENT_UPLOADS = 10
+MAX_FREE_STATEMENT_UPLOADS = 6
 UPGRADE_NOTICE_TEXT = f"You can only process {MAX_FREE_STATEMENT_UPLOADS} statements on the free tier. Upgrade to premium."
     
 # Google OAuth2Component instance
