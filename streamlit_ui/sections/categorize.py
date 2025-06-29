@@ -136,7 +136,7 @@ def show_categorize():
             # upload updated master to S3
             st.session_state.user.update_master(master)
             
-            st.success("Categorized data synced to cloud.")
+            st.toast('Saved changes to cloud!', icon="✨")
 
             # force reload master data
             st.session_state.user.load_master()
