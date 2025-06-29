@@ -33,12 +33,17 @@ else:
     # setting page config here as opposed to at the top of the conditional block
     # allows Streamlit to switch between centered -> wide layout view more seamlessly
     st.set_page_config(**c.STREAMLIT_GENERAL_PAGE_CONFIG)
-    # css.remove_streamlit_menu()
+    css.remove_streamlit_menu()
 
+    show_header()
     if not st.session_state.user.is_premium: 
         show_free_tier_notice()
 
-    show_header()
-    show_upload()
-    show_categorize()
-    show_analytics()
+    tabs = st.tabs(["Budget Buddy", "Settings"])
+    with tabs[0]:
+        show_upload()
+        show_categorize()
+        show_analytics()
+
+    with tabs[1]:
+        st.write("coming soon.")
