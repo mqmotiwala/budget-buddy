@@ -46,9 +46,14 @@ AUTHORIZE_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
 REVOKE_ENDPOINT = "https://oauth2.googleapis.com/revoke"
 
-# misc. settings
+# categorization settings
+INCOME_PARENT_CATEGORY_KEY = "Income"
+SAVINGS_PARENT_CATEGORY_KEY = "Savings"
 EXPENSES_PARENT_CATEGORY_KEY = "Expenses"
 NON_EXPENSES_PARENT_CATEGORY_KEY = "Non-Expenses"
+NON_EXPENSES_CATEGORIES = ["Void", "TBD"]
+
+# misc. settings
 PREFERRED_UI_DATE_FORMAT_MOMENTJS = "dddd, MMMM DD, YYYY"
 PREFERRED_UI_DATE_FORMAT_STRFTIME = "%A, %B %d, %Y"
 FILTER_PLACEHOLDER_TEXT = "No filter is applied when there is no input."

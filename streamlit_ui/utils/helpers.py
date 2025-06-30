@@ -223,3 +223,17 @@ def extract_categories(obj):
         res.append(obj)
 
     return res
+
+def get_index(lst, idx, default=None):
+    """
+    Safely get value at list index
+    
+    Returns:
+        list value at index, if index exists, otherwise returns default
+    """
+    try:
+        return lst[idx]
+    except IndexError:
+        return default
+
+

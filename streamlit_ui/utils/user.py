@@ -150,6 +150,8 @@ class User:
 
         self.CATEGORIES_BODY = json.loads(response['Body'].read().decode("utf-8"))
         self.CATEGORIES = h.extract_categories(self.CATEGORIES_BODY)
+        self.INCOME_CATEGORIES = h.extract_categories(self.CATEGORIES_BODY.get(c.INCOME_PARENT_CATEGORY_KEY, {}))
+        self.SAVINGS_CATEGORIES = h.extract_categories(self.CATEGORIES_BODY.get(c.SAVINGS_PARENT_CATEGORY_KEY, {}))
         self.EXPENSES_CATEGORIES = h.extract_categories(self.CATEGORIES_BODY.get(c.EXPENSES_PARENT_CATEGORY_KEY, {}))
         self.NON_EXPENSES_CATEGORIES = h.extract_categories(self.CATEGORIES_BODY.get(c.NON_EXPENSES_PARENT_CATEGORY_KEY, {}))
 

@@ -12,6 +12,7 @@ from sections.features import show_features
 from sections.analytics import show_analytics
 from sections.categorize import show_categorize
 from sections.free_tier import show_free_tier_notice
+import sections.customize_categories as scc
 
 if "auth" not in st.session_state:
     st.set_page_config(**c.STREAMLIT_LANDING_PAGE_CONFIG)
@@ -37,11 +38,11 @@ else:
     if not st.session_state.user.is_premium: 
         show_free_tier_notice()
 
-    tabs = st.tabs(["Budget Buddy", "Settings"])
+    tabs = st.tabs(["Budget Buddy", "Customize Categories"])
     with tabs[0]:
         show_upload()
         show_categorize()
         show_analytics()
 
     with tabs[1]:
-        st.write("coming soon.")
+        scc.show_customize_categories_v2()
