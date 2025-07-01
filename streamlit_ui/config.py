@@ -35,9 +35,7 @@ sf = boto3.client(
 )
 
 # free/premiun tier settings
-MAX_FREE_STATEMENT_UPLOADS = 3
-UPGRADE_NOTICE_TEXT_UPLOAD_SECTION = f"You can only process {MAX_FREE_STATEMENT_UPLOADS} statements on the free tier. Upgrade to premium!"
-UPGRADE_NOTICE_TEXT_CUSTOMIZE_CATEGORIES_SECTION = f"Custom categorization model is not available on the free tier. Upgrade to premium!"
+MAX_FREE_STATEMENT_UPLOADS = 10
 
 # Google OAuth2Component instance
 CLIENT_ID = st.secrets["oauth"]["GOOGLE_CLIENT_ID"]

@@ -20,13 +20,16 @@ def show_upload():
         recommended_date = latest_dates.min().strftime("%A, %B %d, %Y")
         st.markdown(f"To prevent data gaps, give me statements from :rainbow[{recommended_date}] or earlier!")
 
-    # get num_uploads
-    num_uploads = st.session_state.user.get_user_attribute('num_uploads')
-    num_uploads = 0 if num_uploads is None else num_uploads
-
-    disabled = True if not st.session_state.user.is_premium and num_uploads >= c.MAX_FREE_STATEMENT_UPLOADS else False
-    if disabled:
-        st.error(c.UPGRADE_NOTICE_TEXT_UPLOAD_SECTION, icon="🚫")
+    if not st.session_state.user.is_premium:
+        num_uploads = getattr(st.session_state.user, 'num_uploads', 0)
+        num_remaining_uploads = c.MAX_FREE_STATEMENT_UPLOADS - num_uploads
+        
+        if num_remaining_uploads <= 0:
+            disabled = True
+            st.error(f"You can only process {c.MAX_FREE_STATEMENT_UPLOADS} statements on the free tier. Upgrade to premium!", icon="🚫")
+        else:
+            st.warning(f"You can process {num_remaining_uploads} more statements.")
+            disabled = False 
 
     file = st.file_uploader("Upload CSV File", type=["csv"], on_change=h.clear_issuer_selection, help=c.FILE_UPLOADER_HELP_TEXT, disabled=disabled)
     issuer = st.selectbox("Select Issuer", st.session_state.user.EXISTING_ISSUERS, index=None, key="issuer", disabled=disabled)

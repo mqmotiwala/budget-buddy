@@ -84,7 +84,7 @@ def show_customize_categories():
     # lock this feature behind premium tier
     disabled = not(st.session_state.user.is_premium)
     if disabled:
-        st.error(c.UPGRADE_NOTICE_TEXT_CUSTOMIZE_CATEGORIES_SECTION, icon="🚫")
+        st.error(f"Custom categories are not available on the free tier. Upgrade to premium!", icon="🚫")
         css.divider()
 
     help_text = """

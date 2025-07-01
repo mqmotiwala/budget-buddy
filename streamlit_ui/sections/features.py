@@ -32,4 +32,4 @@ def show_features():
         css.markdown(
             f"""Everyone tracks things differently. Categorize your expenses to match *{css.underline("you")}*."""    
         )
-        st.image(f"{c.ASSETS_PATH}/feature_003.png")
+        st.image(f"{c.ASSETS_PATH}/feature_002.png")
