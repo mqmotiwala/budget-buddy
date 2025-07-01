@@ -83,13 +83,12 @@ def show_customize_categories():
 
     # lock this feature behind premium tier
     disabled = not(st.session_state.user.is_premium)
-    disabled = False
     if disabled:
-        st.error(c.UPGRADE_NOTICE_TEXT_CUSTOMIZE_CATEGORIES_SECTION)
+        st.error(c.UPGRADE_NOTICE_TEXT_CUSTOMIZE_CATEGORIES_SECTION, icon="🚫")
         css.divider()
 
     help_text = """
-        Create new categories by adding them into the fields below.
+        Create new categories by typing them directly into the fields below.
     """
     st.info(help_text, icon="ℹ️")
 
