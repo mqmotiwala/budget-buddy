@@ -1,6 +1,7 @@
 import config as c
 import streamlit as st
 import utils.css as css
+import utils.plotters as p
 
 def show_customize_categories():
 
@@ -15,25 +16,29 @@ def show_customize_categories():
     HEADERS_MARKDOWN_LEVEL = 3
     MAX_NUMBER_OF_COLUMNS = 4
 
+    EXPENSES_EDITING_GROUP_KEY = "expense_buckets"
+    EXPENSES_GROUP_HEADER_KEY_VALUE = "Expense Buckets"
+    OTHER_EDITING_GROUP_KEY = "other"
+
     # this defines the primary editing groups
     # note: expense categories are further categorizable
     editing_groups = {
-        "expense_buckets": {
-                GROUP_HEADER_KEY: "Expense Buckets",
+        EXPENSES_EDITING_GROUP_KEY: {
+                GROUP_HEADER_KEY: EXPENSES_GROUP_HEADER_KEY_VALUE,
                 GROUP_DESCRIPTION_KEY: """
                     Define your expense buckets here.  
                     Note: Buckets are only used for organizing and analytics, you define the expense categories for each bucket below.
                 """,
                 GROUP_VALUES_KEY: st.session_state.user.EXPENSES_BUCKETS
             },
-        "other": [        
+        OTHER_EDITING_GROUP_KEY: [        
             {
-                GROUP_HEADER_KEY: "Income",
+                GROUP_HEADER_KEY: c.INCOME_PARENT_CATEGORY_KEY,
                 GROUP_DESCRIPTION_KEY: "What income streams do you want to track?",
                 GROUP_VALUES_KEY: st.session_state.user.INCOME_CATEGORIES,
             },
             {
-                GROUP_HEADER_KEY: "Savings",
+                GROUP_HEADER_KEY: c.SAVINGS_PARENT_CATEGORY_KEY,
                 GROUP_DESCRIPTION_KEY: "What savings outlets do you have?",
                 GROUP_VALUES_KEY: st.session_state.user.SAVINGS_CATEGORIES,
             }
@@ -78,6 +83,7 @@ def show_customize_categories():
 
     # lock this feature behind premium tier
     disabled = not(st.session_state.user.is_premium)
+    disabled = False
     if disabled:
         st.error(c.UPGRADE_NOTICE_TEXT_CUSTOMIZE_CATEGORIES_SECTION)
         css.divider()
@@ -87,16 +93,16 @@ def show_customize_categories():
     """
     st.info(help_text, icon="ℹ️")
 
-    # render "other" editing_groups
+    # render OTHER_EDITING_GROUP_KEY editing_groups
     selections = {}
-    cols = st.columns(len(editing_groups["other"]))
-    for i, attrs in enumerate(editing_groups["other"]):
+    cols = st.columns(len(editing_groups[OTHER_EDITING_GROUP_KEY]))
+    for i, attrs in enumerate(editing_groups[OTHER_EDITING_GROUP_KEY]):
         with cols[i]:
             res = render_editing_group(attrs)
             selections[attrs[GROUP_HEADER_KEY]] = res
 
     # render expense_buckets editing_group
-    attrs = editing_groups["expense_buckets"]
+    attrs = editing_groups[EXPENSES_EDITING_GROUP_KEY]
     buckets = render_editing_group(attrs)
     selections[attrs[GROUP_HEADER_KEY]] = buckets
 
@@ -127,3 +133,9 @@ def show_customize_categories():
 
             res = render_editing_group(attrs)
             selections[attrs[GROUP_HEADER_KEY]] = res
+
+    categories = selections.copy()
+    categories.pop(EXPENSES_GROUP_HEADER_KEY_VALUE)
+    st.json(categories)
+
+    st.plotly_chart(p.sankey_json(categories))

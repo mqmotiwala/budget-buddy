@@ -128,6 +128,113 @@ def sankey(df):
 
     return fig
 
+def sankey_json(data):
+    """
+    Build a hierarchical Sankey diagram from JSON-like dict structure,
+    avoiding self-loops when a parent and child share the same name.
+    """
+    if not isinstance(data, dict):
+        raise TypeError("Input data must be of type dict.")
+    
+    # 1. Pull out the special sections
+    income_leaves  = data.get("Income", [])
+    savings_leaves = data.get("Savings", [])
+    expense_groups = {
+        k: v for k, v in data.items()
+        if k not in ("Income", "Savings")
+    }
+
+    sources, targets, values = [], [], []
+
+    # A. Income leaves → Income (skip if leaf == "Income")
+    for leaf in income_leaves:
+        if leaf != "Income":
+            sources.append(leaf)
+            targets.append("Income")
+            values.append(1)
+
+    # B. Income → Savings  &  Income → Expenses
+    total_savings = len(savings_leaves)
+    total_expenses = sum(len(v) for v in expense_groups.values())
+    sources += ["Income", "Income"]
+    targets += ["Savings", "Expenses"]
+    values  += [total_savings, total_expenses]
+
+    # C. Savings → leaves (skip if leaf == "Savings")
+    for leaf in savings_leaves:
+        if leaf != "Savings":
+            sources.append("Savings")
+            targets.append(leaf)
+            values.append(1)
+
+    # D. Expenses → sub-categories → leaves
+    for group, leaves in expense_groups.items():
+        # If this group is just a singleton of itself, do a direct link
+        if len(leaves) == 1 and leaves[0] == group:
+            sources.append("Expenses")
+            targets.append(group)   # group == leaf here
+            values.append(1)
+        else:
+            # 1) Expenses → group
+            sources.append("Expenses")
+            targets.append(group)
+            values.append(len(leaves))
+
+            # 2) group → each of its leaves (skip self‐loops)
+            for leaf in leaves:
+                if leaf != group:
+                    sources.append(group)
+                    targets.append(leaf)
+                    values.append(1)
+
+    # Build the ordered, deduplicated node list
+    all_nodes = list(dict.fromkeys(sources + targets))
+    idx_map   = { name:i for i, name in enumerate(all_nodes) }
+
+    # colors
+    colors = {
+        "Income": "#014400",
+        "Savings": "#72b772",
+        "Expenses": "#d62728",
+    }
+
+    # assign node colors in the same order as nodes
+    # default color is used for general expense types
+    node_colors = [colors.get(cat, "#da7878") for cat in all_nodes]
+
+    # # color links by the target node
+    link_colors = [hex_to_rgba(node_colors[t]) for t in [idx_map[t] for t in targets]]
+
+    # Build Sankey diagram
+    fig = go.Figure(data=[go.Sankey(
+        node=dict(
+            pad=20,
+            thickness=30,
+            line=dict(color="black", width=1),
+            label=all_nodes,
+            color=node_colors,
+            hovertemplate='%{label}<br><extra></extra>'
+        ),
+        link=dict(
+            source=[idx_map[s] for s in sources],
+            target=[idx_map[t] for t in targets],
+            value=values,
+            color=link_colors,
+            hovertemplate="%{source.label} → %{target.label}<br>"
+        )
+    )])
+
+    fig.update_layout(
+        # override any Streamlit theming injections
+        # without this, I have observed major formatting issues with node annotation labels
+        template=None,
+        height=450,
+        margin=dict(l=0, r=0, t=30, b=10),
+        font=dict(size=14, weight=1000, family="Courier New"),
+    )
+    
+    return fig
+
 def line_chart(df, x_values):
     """
     df: a DataFrame already grouped and filtered
