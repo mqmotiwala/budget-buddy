@@ -39,11 +39,12 @@ else:
     if not st.session_state.user.is_premium: 
         show_free_tier_notice()
 
-    tabs = st.tabs(["Budget Buddy", "Customize Categories", "Statement Issuers", "Get Premium", "Privacy Policy", "Communications Hub"])
-    with tabs[0]:
+    # TABS = st.tabs() container objects mapped by TAB_NAMES
+    tabs = dict(zip(c.TAB_NAMES, st.tabs(c.TAB_NAMES)))
+    with tabs[c.BUDGET_BUDDY_TAB_NAME]:
         show_upload()
         show_categorize()
         show_analytics()
 
-    with tabs[1]:
+    with tabs[c.CUSTOMIZE_CATEGORIES_TAB_NAME]:
         show_customize_categories()

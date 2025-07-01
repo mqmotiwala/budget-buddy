@@ -1,5 +1,6 @@
 import config as c
 import streamlit as st
+import utils.helpers as h
 
 def show_free_tier_notice():
     # move into function to ensure st.session_state.user is initialized 
@@ -11,7 +12,8 @@ def show_free_tier_notice():
     {f"You can process {num_remaining_uploads} more statements." if num_remaining_uploads > 0 else "You've hit the free tier statements processing limit."}
     """
 
-    with st.expander(label="Psst! You're on the free tier."):
+    with st.expander(label="Psst! You're on the free tier.", expanded=True):
         st.warning(FREE_TIER_NOTICE_TEXT)
 
-        st.button("Get Premium")
+        if st.button("Get Premium"):
+            h.switch_to_tab(c.GET_PREMIUM_TAB_NAME)

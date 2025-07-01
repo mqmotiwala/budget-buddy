@@ -61,6 +61,24 @@ FILTER_PLACEHOLDER_TEXT = "No filter is applied when there is no input."
 FILE_UPLOADER_HELP_TEXT = "Statements uploaded remain encrypted at all times."
 ASSETS_PATH = "streamlit_ui/assets"
 
+# tab settings
+GET_PREMIUM_TAB_NAME = "Get Premium"
+BUDGET_BUDDY_TAB_NAME = "Budget Buddy"
+PRIVACY_POLICY_TAB_NAME = "Privacy Policy"
+SELECT_ISSUERS_TAB_NAME = "Statement Issuers"
+COMMUNICATIONS_HUB_TAB_NAME = "Communications Hub"
+CUSTOMIZE_CATEGORIES_TAB_NAME = "Customize Categories"
+
+# this is passed to st.tabs() which displays tabs in order of elements in the list
+TAB_NAMES = [
+    BUDGET_BUDDY_TAB_NAME,
+    CUSTOMIZE_CATEGORIES_TAB_NAME,
+    SELECT_ISSUERS_TAB_NAME,
+    COMMUNICATIONS_HUB_TAB_NAME,
+    PRIVACY_POLICY_TAB_NAME,
+    GET_PREMIUM_TAB_NAME,
+]
+
 # page configs
 BUDGET_BUDDY_ICON = "🤓"
 BUDGET_BUDDY_COLOR = "#EFB60C" # same as primaryColor in config.toml
