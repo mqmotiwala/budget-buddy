@@ -2,22 +2,22 @@ import config as c
 import streamlit as st
 
 def set_app_wide_styling():
-        """
-        Applies specific styling choices app wide.
-        """
-        
-        # enforce color styling on multiselect widgets
-        MULTISELECT_COLOR = "#F6E8BE"
-        css = f"""
-        <style>
-            .stMultiSelect div[data-baseweb="select"] span[data-baseweb="tag"] {{
-                background-color: {MULTISELECT_COLOR} !important;
-                color: black !important;
-            }}
-        </style>
-        """
+    """
+    Applies specific styling choices app wide.
+    """
+    
+    # enforce color styling on multiselect widgets
+    MULTISELECT_COLOR = "#F6E8BE"
+    css = f"""
+    <style>
+        .stMultiSelect div[data-baseweb="select"] span[data-baseweb="tag"] {{
+            background-color: {MULTISELECT_COLOR} !important;
+            color: black !important;
+        }}
+    </style>
+    """
 
-        st.html(css)
+    st.html(css)
 
 def highlight(text, background=c.BUDGET_BUDDY_COLOR, color="black", font_weight="normal", font_size="inherit", tilt=0):
     """

@@ -78,7 +78,6 @@ def show_customize_categories():
 
     # lock this feature behind premium tier
     disabled = not(st.session_state.user.is_premium)
-    disabled = False # remove in prod
     if disabled:
         st.error(c.UPGRADE_NOTICE_TEXT_CUSTOMIZE_CATEGORIES_SECTION)
         css.divider()
