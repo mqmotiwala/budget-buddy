@@ -11,10 +11,20 @@ def set_app_wide_styling():
     MULTISELECT_COLOR = "#F6E8BE"
     css = f"""
     <style>
-      .stMultiSelect span[data-baseweb="tag"]:not([aria-disabled="true"]) {{
+        .stMultiSelect span[data-baseweb="tag"]:not([aria-disabled="true"]) {{
             background-color: {MULTISELECT_COLOR} !important;
             color: black !important;
         }}
+    </style>
+    """
+
+    # iframes with height=0 must have `display: none` styling
+    # see utils.helpers.switch_to_tab() for context
+    css += """
+    <style>
+        .element-container:has(iframe[height="0"]) {
+            display: none;
+        }
     </style>
     """
 

@@ -2,6 +2,7 @@ import time
 import traceback
 import config as c
 import streamlit as st
+from streamlit.components.v1 import html
 
 from datetime import date, timedelta
 
@@ -236,4 +237,45 @@ def get_index(lst, idx, default=None):
     except IndexError:
         return default
 
+def switch_to_tab(tab_name):
+    """
+        Streamlit does not offer a programmatic way to switch between st.tabs 
+        As a workaround, we inject JavaScript that:
+            finds the tab element in the DOM by its innerText value
+            and performs a click() on the element
 
+        Note: 
+            Streamlit's rendering model checks if an HTML component has already been rendered
+            and skips re-rendering if no change is detected.
+
+            To bypass this, each script is given a unique id 
+
+            Lastly, streamlit.components.v1.html inserts an iframe which contains the script that's ran.
+            Even with kwarg height=0, the iframe still takes up space and has padding.
+            This is a known issue, see: https://github.com/streamlit/streamlit/issues/6605
+
+            To fix this, css.set_app_wide_styling() includes a style 
+            where iframes with height=0 have `display: none` styling applied. 
+
+        Args 
+            tab_name (str): name of tab to switch to
+    """
+
+    safe_name = tab_name.replace('"', '\\"')
+    js = f"""
+    <script id={time.time()}>
+        function clickTab() {{
+            const tabs = parent.document.querySelectorAll('button[role="tab"]');
+            for (const tab of tabs) {{
+                if (tab.innerText.trim() === "{safe_name}") {{
+                    tab.click();
+                    return;
+                }}
+            }}
+        }}
+
+        clickTab();
+    </script>
+    """
+
+    html(js, height=0)
