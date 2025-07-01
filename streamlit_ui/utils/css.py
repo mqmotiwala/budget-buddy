@@ -7,10 +7,11 @@ def set_app_wide_styling():
     """
     
     # enforce color styling on multiselect widgets
+    # this still respects the base styling for disabled multiselect widgets
     MULTISELECT_COLOR = "#F6E8BE"
     css = f"""
     <style>
-        .stMultiSelect div[data-baseweb="select"] span[data-baseweb="tag"] {{
+      .stMultiSelect span[data-baseweb="tag"]:not([aria-disabled="true"]) {{
             background-color: {MULTISELECT_COLOR} !important;
             color: black !important;
         }}
