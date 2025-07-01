@@ -154,6 +154,9 @@ class User:
         self.SAVINGS_CATEGORIES = h.extract_categories(self.CATEGORIES_BODY.get(c.SAVINGS_PARENT_CATEGORY_KEY, {}))
         self.EXPENSES_CATEGORIES = h.extract_categories(self.CATEGORIES_BODY.get(c.EXPENSES_PARENT_CATEGORY_KEY, {}))
         self.NON_EXPENSES_CATEGORIES = h.extract_categories(self.CATEGORIES_BODY.get(c.NON_EXPENSES_PARENT_CATEGORY_KEY, {}))
+        
+        self.EXPENSES_BODY = self.CATEGORIES_BODY.get(c.EXPENSES_PARENT_CATEGORY_KEY, {})
+        self.EXPENSES_BUCKETS = self.EXPENSES_BODY.keys()
 
         # existing issuers
         response = c.s3.list_objects_v2(Bucket=c.S3_BUCKET, Prefix=f"{self.STATEMENTS_FOLDER}/", Delimiter="/")

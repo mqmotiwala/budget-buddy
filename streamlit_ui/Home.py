@@ -33,6 +33,7 @@ else:
     # setting page config here as opposed to at the top of the conditional block
     # allows Streamlit to switch between centered -> wide layout view more seamlessly
     st.set_page_config(**c.STREAMLIT_GENERAL_PAGE_CONFIG)
+    css.set_app_wide_styling()
 
     show_header()
     if not st.session_state.user.is_premium: 

@@ -26,7 +26,7 @@ def show_upload():
 
     disabled = True if not st.session_state.user.is_premium and num_uploads >= c.MAX_FREE_STATEMENT_UPLOADS else False
     if disabled:
-        st.error(c.UPGRADE_NOTICE_TEXT)
+        st.error(c.UPGRADE_NOTICE_TEXT_UPLOAD_SECTION)
 
     file = st.file_uploader("Upload CSV File", type=["csv"], on_change=h.clear_issuer_selection, help=c.FILE_UPLOADER_HELP_TEXT, disabled=disabled)
     issuer = st.selectbox("Select Issuer", st.session_state.user.EXISTING_ISSUERS, index=None, key="issuer", disabled=disabled)

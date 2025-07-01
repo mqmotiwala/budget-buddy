@@ -68,7 +68,7 @@ def show_analytics():
             st.write("There is no categorized data for me to analyze. 😔")
             return 
         
-        st.markdown("##### *Deep Dives by Category*")
+        css.header("*Deep Dives by Category*", lvl=5)
         filtered_categories = st.multiselect(
             label = "Filter by category",
             options = [cat for cat in st.session_state.user.CATEGORIES if cat not in st.session_state.user.NON_EXPENSES_CATEGORIES], 
@@ -102,6 +102,6 @@ def show_analytics():
                 use_container_width=True
             )
 
-        st.markdown("##### *Cashflow At A Glance*")
+        css.header("*Cashflow At A Glance*", lvl=5)
         st.plotly_chart(p.sankey(analyze), use_container_width=True)
 

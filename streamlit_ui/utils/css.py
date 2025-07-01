@@ -1,6 +1,24 @@
 import config as c
 import streamlit as st
 
+def set_app_wide_styling():
+        """
+        Applies specific styling choices app wide.
+        """
+        
+        # enforce color styling on multiselect widgets
+        MULTISELECT_COLOR = "#F6E8BE"
+        css = f"""
+        <style>
+            .stMultiSelect div[data-baseweb="select"] span[data-baseweb="tag"] {{
+                background-color: {MULTISELECT_COLOR} !important;
+                color: black !important;
+            }}
+        </style>
+        """
+
+        st.html(css)
+
 def highlight(text, background=c.BUDGET_BUDDY_COLOR, color="black", font_weight="normal", font_size="inherit", tilt=0):
     """
     Returns an HTML <span> with inline styles for highlighting text in Streamlit markdown.
@@ -58,6 +76,23 @@ def underline(text, color=c.BUDGET_BUDDY_COLOR, thickness="2px", offset="2px", s
         f"'>{text}</span>"
     )
 
+def header(text, lvl=1, underline_text=True):
+    """
+    wrapper on st.markdown to shorthand different markdown levels
+
+    args:
+        lvl (int): Markdown level to use. Must be valid.
+        underline_text (bool): whether or not to underline text
+    """
+
+    if not lvl in range(1, 7):
+        raise ValueError("Markdown levels must be between 1 to 6")
+    
+    if underline_text:
+        return markdown(f"{"#"*lvl} {underline(text)}")
+    else:
+        return st.markdown(f"{"#"*lvl} {text}")
+    
 def empty_space():
     """
     Returns an HTML <span> with a squiggly underline using text-decoration-style: wavy.
