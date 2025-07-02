@@ -1,7 +1,7 @@
 import config as c
 import streamlit as st
 import utils.css as css
-import utils.plotters as p
+import utils.helpers as h
 
 def show_customize_categories():
 
@@ -83,6 +83,7 @@ def show_customize_categories():
 
     # lock this feature behind premium tier
     disabled = not(st.session_state.user.is_premium)
+    disabled = False
     if disabled:
         st.error(f"Custom categories are not available on the free tier. Upgrade to premium!", icon="🚫")
         css.divider()
@@ -133,8 +134,24 @@ def show_customize_categories():
             res = render_editing_group(attrs)
             selections[attrs[GROUP_HEADER_KEY]] = res
 
+    # modify selections to match categories.json format
     categories = selections.copy()
-    categories.pop(EXPENSES_GROUP_HEADER_KEY_VALUE)
-    st.json(categories)
 
-    st.plotly_chart(p.sankey_json(categories))
+    # this key contains the expense bucket names
+    # pop since its not required in categories.json
+    categories.pop(EXPENSES_GROUP_HEADER_KEY_VALUE)
+
+    # shift all expense_buckets under EXPENSES_PARENT_CATEGORY_KEY
+    categories[c.EXPENSES_PARENT_CATEGORY_KEY] = {}
+    for bucket in selections[EXPENSES_GROUP_HEADER_KEY_VALUE]:
+        categories.pop(bucket)
+        categories[c.EXPENSES_PARENT_CATEGORY_KEY][bucket] = selections[bucket]
+
+    # add non_expenses key
+    categories[c.NON_EXPENSES_PARENT_CATEGORY_KEY] = c.NON_EXPENSES_CATEGORIES
+    
+    if st.button("💾 Update Categories", disabled=disabled):
+        st.session_state.user.update_categories(categories)
+        st.session_state.user.load_budgetbuddy_user_variables()
+
+        h.save_toast()

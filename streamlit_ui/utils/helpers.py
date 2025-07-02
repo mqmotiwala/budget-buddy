@@ -279,3 +279,6 @@ def switch_to_tab(tab_name):
     """
 
     html(js, height=0)
+
+def save_toast():
+    st.toast('Saved changes to cloud!', icon="✨")

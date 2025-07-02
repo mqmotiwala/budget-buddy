@@ -16,7 +16,7 @@ def sankey(df):
     # net values for all categories
     totals = {
         category: abs(df[df[c.CATEGORY_COLUMN] == category][c.AMOUNT_COLUMN].sum())
-        for category in df[c.CATEGORY_COLUMN].unique()
+        for category in st.session_state.user.CATEGORIES
     }
 
     # add primary nodes to totals
@@ -54,8 +54,8 @@ def sankey(df):
     # INCOME_CATEGORIES -> INCOME
     for category in st.session_state.user.INCOME_CATEGORIES:
         if category != c.INCOME_PARENT_CATEGORY_KEY:
-            source.append(category)
-            target.append(c.INCOME_PARENT_CATEGORY_KEY)
+            source.append(node_indices[category])
+            target.append(node_indices[c.INCOME_PARENT_CATEGORY_KEY])
             value.append(totals.get(category, 0))
 
     # INCOME → EXPENSES
@@ -154,80 +154,82 @@ def sankey(df):
 
 def sankey_json(data):
     """
-    Build a hierarchical Sankey diagram from JSON-like dict structure,
-    avoiding self-loops when a parent and child share the same name.
+    Builds a hierarchical Sankey diagram for Categories model,
+    Avoids self-loops when a parent and child share the same name.
+
+    Args:
+        data (dict): categories.json as dict
     """
+
     if not isinstance(data, dict):
         raise TypeError("Input data must be of type dict.")
     
-    # 1. Pull out the special sections
-    income_leaves  = data.get("Income", [])
-    savings_leaves = data.get("Savings", [])
-    expense_groups = {
-        k: v for k, v in data.items()
-        if k not in ("Income", "Savings")
-    }
+    source, target, value = [], [], []
 
-    sources, targets, values = [], [], []
+    # INCOME_CATEGORIES -> INCOME
+    for category in st.session_state.user.INCOME_CATEGORIES:
+        if category != c.INCOME_PARENT_CATEGORY_KEY:
+            source.append(category)
+            target.append(c.INCOME_PARENT_CATEGORY_KEY)
+            value.append(1)
 
-    # A. Income leaves → Income (skip if leaf == "Income")
-    for leaf in income_leaves:
-        if leaf != "Income":
-            sources.append(leaf)
-            targets.append("Income")
-            values.append(1)
+    # INCOME → EXPENSES
+    source.append(c.INCOME_PARENT_CATEGORY_KEY)
+    target.append(c.EXPENSES_PARENT_CATEGORY_KEY)
+    value.append(1)
 
-    # B. Income → Savings  &  Income → Expenses
-    total_savings = len(savings_leaves)
-    total_expenses = sum(len(v) for v in expense_groups.values())
-    sources += ["Income", "Income"]
-    targets += ["Savings", "Expenses"]
-    values  += [total_savings, total_expenses]
+    # INCOME → SAVINGS
+    source.append(c.INCOME_PARENT_CATEGORY_KEY)
+    target.append(c.SAVINGS_PARENT_CATEGORY_KEY)
+    value.append(1)
 
-    # C. Savings → leaves (skip if leaf == "Savings")
-    for leaf in savings_leaves:
-        if leaf != "Savings":
-            sources.append("Savings")
-            targets.append(leaf)
-            values.append(1)
+    # EXPENSES → EXPENSES_BUCKETS → EXPENSES_CATEGORIES 
+    for bucket in st.session_state.user.EXPENSES_BUCKETS:
+        if bucket != c.EXPENSES_PARENT_CATEGORY_KEY:
+            source.append(c.EXPENSES_PARENT_CATEGORY_KEY)
+            target.append(bucket)
+            value.append(1)
 
-    # D. Expenses → sub-categories → leaves
-    for group, leaves in expense_groups.items():
-        # If this group is just a singleton of itself, do a direct link
-        if len(leaves) == 1 and leaves[0] == group:
-            sources.append("Expenses")
-            targets.append(group)   # group == leaf here
-            values.append(1)
-        else:
-            # 1) Expenses → group
-            sources.append("Expenses")
-            targets.append(group)
-            values.append(len(leaves))
+        for category in st.session_state.user.EXPENSES_BODY.get(bucket, []):
+            if category != bucket and category in st.session_state.user.EXPENSES_CATEGORIES:
+                source.append(bucket)
+                target.append(category)
+                value.append(1)      
 
-            # 2) group → each of its leaves (skip self‐loops)
-            for leaf in leaves:
-                if leaf != group:
-                    sources.append(group)
-                    targets.append(leaf)
-                    values.append(1)
+    # SAVINGS → SAVINGS_CATEGORIES
+    for category in st.session_state.user.SAVINGS_CATEGORIES:
+        if category != c.SAVINGS_PARENT_CATEGORY_KEY:
+            source.append(c.SAVINGS_PARENT_CATEGORY_KEY)
+            target.append(category)
+            value.append(1)
 
     # Build the ordered, deduplicated node list
-    all_nodes = list(dict.fromkeys(sources + targets))
+    all_nodes = list(dict.fromkeys(source + target))
     idx_map   = { name:i for i, name in enumerate(all_nodes) }
 
     # colors
     colors = {
-        "Income": "#014400",
-        "Savings": "#72b772",
+        c.INCOME_PARENT_CATEGORY_KEY: "#014400",
+        c.SAVINGS_PARENT_CATEGORY_KEY: "#72b772",
         c.EXPENSES_PARENT_CATEGORY_KEY: "#d62728",
     }
 
     # assign node colors in the same order as nodes
+    # for general expense categories, a random red shade is assigned
+    red_variants = [
+        "#B71414",  # dark red
+        "#E51919",  # rich mid-dark red
+        "#EA4747",  # medium red
+        "#EF7575",  # soft mid-light red
+        "#F4A3A3",  # light red
+    ]
+
+    # assign node colors in the same order as nodes
     # default color is used for general expense types
-    node_colors = [colors.get(cat, "#da7878") for cat in all_nodes]
+    node_colors = [colors.get(cat, random.choice(red_variants)) for cat in all_nodes]
 
     # # color links by the target node
-    link_colors = [hex_to_rgba(node_colors[t]) for t in [idx_map[t] for t in targets]]
+    link_colors = [hex_to_rgba(node_colors[t]) for t in [idx_map[t] for t in target]]
 
     # Build Sankey diagram
     fig = go.Figure(data=[go.Sankey(
@@ -240,11 +242,11 @@ def sankey_json(data):
             hovertemplate='%{label}<br><extra></extra>'
         ),
         link=dict(
-            source=[idx_map[s] for s in sources],
-            target=[idx_map[t] for t in targets],
-            value=values,
+            source=[idx_map[s] for s in source],
+            target=[idx_map[t] for t in target],
+            value=value,
             color=link_colors,
-            hovertemplate="%{source.label} → %{target.label}<br>"
+            hovertemplate="%{source.label} → %{target.label}<br><extra></extra>"
         )
     )])
 
@@ -256,7 +258,7 @@ def sankey_json(data):
         margin=dict(l=0, r=0, t=30, b=10),
         font=dict(size=14, weight=1000, family="Courier New"),
     )
-    
+
     return fig
 
 def line_chart(df, x_values):

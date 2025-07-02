@@ -203,3 +203,15 @@ class User:
             Key=f"{self.MASTER_KEY}",
             Body=out_buffer.getvalue()
         )
+
+    def update_categories(self, categories):
+        """
+        Update categories.json in S3 with the provided data.
+        """
+
+        c.s3.put_object(
+            Bucket=c.S3_BUCKET,
+            Key=f"{self.CATEGORIES_KEY}",
+            Body=json.dumps(categories, indent=4),
+            ContentType='application/json'
+        )
