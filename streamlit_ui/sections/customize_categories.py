@@ -155,3 +155,6 @@ def show_customize_categories():
         st.session_state.user.load_budgetbuddy_user_variables()
 
         h.save_toast()
+
+        # force Streamlit to re-render all widgets that rely on st.session_state.user.CATEGORIES data
+        st.rerun()

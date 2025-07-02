@@ -107,8 +107,11 @@ def show_categorize():
         display_df = master[date_filter & description_filter & amount_filter & issuer_filter & category_filter & notes_filter]
 
         if uncategorized.empty and TBD.empty:
-            st.markdown(":rainbow[Nice!] All expenses are categorized.")
-            st.text("You can still edit existing categories below.")
+            st.markdown("""
+            :rainbow[Nice!] All expenses are categorized.  
+            You can still edit existing categories below."""
+        )
+
         else:
             st.markdown(f":rainbow[{len(uncategorized) + len(TBD)}/{len(master)}] expenses are uncategorized!")
 

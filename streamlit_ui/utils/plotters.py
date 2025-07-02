@@ -7,6 +7,13 @@ import plotly.graph_objects as go
 from utils.helpers import hex_to_rgba
 
 def sankey(df):
+    """
+        Generate Sankey diagram for user spending data
+
+        Note:
+            This avoids self-loops if a parent and child share the same name
+            so, under such situations, those links are not rendered.
+    """
 
     OVERSPENT_CUSTOM_NODE_NAME = "From Cash Reserve"    # Node targeted when income-(savings+expenses) > 0
     UNDERSPENT_CUSTOM_NODE_NAME = "To Cash Reserve"     # Node sourced when income-(savings+expenses) < 0

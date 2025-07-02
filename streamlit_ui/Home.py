@@ -26,7 +26,7 @@ if "auth" not in st.session_state:
 else:
     # initialize master data for session, if needed
     # the session state key is used to access master across all app logic
-    # its forcefully reloaded when required by invoking h.load_master()
+    # its forcefully reloaded when required by invoking load_master() directly
     if not hasattr(st.session_state.user, "master"):
         st.session_state.user.load_master()
 
