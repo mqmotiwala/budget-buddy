@@ -47,7 +47,7 @@ def lambda_handler(event, context):
                 'description': 'str',
                 'amount': 'float64',
                 'statement_issuer': 'str',
-                'category': 'str',
+                'category': 'category',
                 'notes': 'str'
             },
             parse_dates=['transaction_date'],
