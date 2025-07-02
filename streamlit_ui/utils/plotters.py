@@ -1,3 +1,4 @@
+import random
 import config as c
 import altair as alt
 import streamlit as st
@@ -6,11 +7,9 @@ import plotly.graph_objects as go
 from utils.helpers import hex_to_rgba
 
 def sankey(df):
-    CUSTOM_NODES = {
-        "Expenses": "Parent node for all expenses",
-        "To Cash Reserve": "Node targeted when income-(savings+expenses) > 0",
-        "From Cash Reserve": "Node sourced when income-(savings+expenses) < 0"
-    }
+
+    OVERSPENT_CUSTOM_NODE_NAME = "From Cash Reserve"    # Node targeted when income-(savings+expenses) > 0
+    UNDERSPENT_CUSTOM_NODE_NAME = "To Cash Reserve"     # Node sourced when income-(savings+expenses) < 0
 
     source, target, value = [], [], []
 
@@ -20,35 +19,31 @@ def sankey(df):
         for category in df[c.CATEGORY_COLUMN].unique()
     }
 
-    # net values for primary nodes
-    primary_nodes_net_values = {}
+    # add primary nodes to totals
+    # primary nodes are the top-level keys in the categories model
     for primary_node in st.session_state.user.CATEGORIES_BODY.keys():
-        primary_node_categories = h.extract_categories(st.session_state.user.CATEGORIES_BODY[primary_node])
-        primary_nodes_net_values[primary_node] = sum(totals.get(category, 0) for category in primary_node_categories)
+        primary_node_categories = h.extract_categories(st.session_state.user.CATEGORIES_BODY.get(primary_node, []))
+        totals[primary_node] = sum(totals.get(category, 0) for category in primary_node_categories)
 
-    # Determine flow delta
-    total_outflows = primary_nodes_net_values["Savings"] + primary_nodes_net_values["Expenses"]
-    total_inflows = primary_nodes_net_values["Income"]
+    # add expense buckets to totals
+    for bucket in st.session_state.user.EXPENSES_BODY.keys():
+        bucket_categories = h.extract_categories(st.session_state.user.EXPENSES_BODY.get(bucket, []))
+        totals[bucket] = sum(totals.get(category, 0) for category in bucket_categories)
+
+    # add custom node values to totals
+    total_outflows = totals[c.SAVINGS_PARENT_CATEGORY_KEY] + totals[c.EXPENSES_PARENT_CATEGORY_KEY]
+    total_inflows = totals[c.INCOME_PARENT_CATEGORY_KEY]
     delta = total_inflows - total_outflows
-
-    # Compute value for custom nodes
-    custom_node_values = {
-        "To Cash Reserve": max(delta, 0),
-        "From Cash Reserve": abs(min(delta, 0)),
-        "Expenses": primary_nodes_net_values["Expenses"]
-    }
+    totals[UNDERSPENT_CUSTOM_NODE_NAME] = max(delta, 0)
+    totals[OVERSPENT_CUSTOM_NODE_NAME] = abs(min(delta, 0))
 
     # Build labeled nodes with currency (includes both config + dynamic)
-    raw_nodes = st.session_state.user.CATEGORIES + list(CUSTOM_NODES.keys())
+    raw_nodes = totals.keys()
     nodes = []
     node_values = []
 
     for category in raw_nodes:
-        value_for_node = (
-            primary_nodes_net_values.get(category) or
-            totals.get(category) or
-            custom_node_values.get(category, 0)
-        )
+        value_for_node = totals.get(category)
         label = f"{category} (${value_for_node:,.2f})" if value_for_node else category
         nodes.append(label)
         node_values.append(value_for_node)
@@ -56,44 +51,73 @@ def sankey(df):
     # Create index mapping based on raw node names
     node_indices = {category: i for i, category in enumerate(raw_nodes)}
 
-    # Income → Expenses
-    source.append(node_indices["Income"])
-    target.append(node_indices["Expenses"])
-    value.append(primary_nodes_net_values["Expenses"])
+    # INCOME_CATEGORIES -> INCOME
+    for category in st.session_state.user.INCOME_CATEGORIES:
+        if category != c.INCOME_PARENT_CATEGORY_KEY:
+            source.append(category)
+            target.append(c.INCOME_PARENT_CATEGORY_KEY)
+            value.append(totals.get(category, 0))
 
-    # Income → Savings
-    source.append(node_indices["Income"])
-    target.append(node_indices["Savings"])
-    value.append(primary_nodes_net_values["Savings"])
+    # INCOME → EXPENSES
+    source.append(node_indices[c.INCOME_PARENT_CATEGORY_KEY])
+    target.append(node_indices[c.EXPENSES_PARENT_CATEGORY_KEY])
+    value.append(totals[c.EXPENSES_PARENT_CATEGORY_KEY])
 
-    # Expenses → each expense category
-    for category in st.session_state.user.EXPENSES_CATEGORIES:
-        source.append(node_indices["Expenses"])
-        target.append(node_indices[category])
-        value.append(totals.get(category, 0))
+    # INCOME → SAVINGS
+    source.append(node_indices[c.INCOME_PARENT_CATEGORY_KEY])
+    target.append(node_indices[c.SAVINGS_PARENT_CATEGORY_KEY])
+    value.append(totals[c.SAVINGS_PARENT_CATEGORY_KEY])
+
+    # EXPENSES → EXPENSES_BUCKETS → EXPENSES_CATEGORIES 
+    for bucket in st.session_state.user.EXPENSES_BUCKETS:
+        if bucket != c.EXPENSES_PARENT_CATEGORY_KEY:
+            source.append(node_indices[c.EXPENSES_PARENT_CATEGORY_KEY])
+            target.append(node_indices[bucket])
+            value.append(totals.get(bucket, 0))
+
+        for category in st.session_state.user.EXPENSES_BODY.get(bucket, []):
+            if category != bucket and category in totals.keys():
+                source.append(node_indices[bucket])
+                target.append(node_indices[category])
+                value.append(totals.get(category, 0))       
+
+    # SAVINGS → SAVINGS_CATEGORIES
+    for category in st.session_state.user.SAVINGS_CATEGORIES:
+        if category != c.SAVINGS_PARENT_CATEGORY_KEY:
+            source.append(c.SAVINGS_PARENT_CATEGORY_KEY)
+            target.append(category)
+            value.append(totals.get(category, 0))
 
     # Delta flow
     if delta > 0:
-        source.append(node_indices["Income"])
-        target.append(node_indices["To Cash Reserve"])
+        source.append(node_indices[c.INCOME_PARENT_CATEGORY_KEY])
+        target.append(node_indices[UNDERSPENT_CUSTOM_NODE_NAME])
         value.append(delta)
     elif delta < 0:
-        source.append(node_indices["From Cash Reserve"])
-        target.append(node_indices["Income"])
+        source.append(node_indices[OVERSPENT_CUSTOM_NODE_NAME])
+        target.append(node_indices[c.INCOME_PARENT_CATEGORY_KEY])
         value.append(abs(delta))
 
     # colors
     colors = {
-        "Income": "#014400",
-        "Savings": "#72b772",
-        "Expenses": "#d62728",
-        "To Cash Reserve": "#17becf",
-        "From Cash Reserve": "#ff7f0e"
+        c.INCOME_PARENT_CATEGORY_KEY: "#014400",
+        c.SAVINGS_PARENT_CATEGORY_KEY: "#72b772",
+        c.EXPENSES_PARENT_CATEGORY_KEY: "#d62728",
+        UNDERSPENT_CUSTOM_NODE_NAME: "#17becf",
+        OVERSPENT_CUSTOM_NODE_NAME: "#ff7f0e"
     }
 
     # assign node colors in the same order as nodes
-    # default color is used for general expense types
-    node_colors = [colors.get(cat, "#da7878") for cat in raw_nodes]
+    # for general expense categories, a random red shade is assigned
+    red_variants = [
+        "#B71414",  # dark red
+        "#E51919",  # rich mid-dark red
+        "#EA4747",  # medium red
+        "#EF7575",  # soft mid-light red
+        "#F4A3A3",  # light red
+    ]
+
+    node_colors = [colors.get(cat, random.choice(red_variants)) for cat in raw_nodes]
 
     # color links by the target node
     link_colors = [hex_to_rgba(node_colors[t]) for t in target]
@@ -195,7 +219,7 @@ def sankey_json(data):
     colors = {
         "Income": "#014400",
         "Savings": "#72b772",
-        "Expenses": "#d62728",
+        c.EXPENSES_PARENT_CATEGORY_KEY: "#d62728",
     }
 
     # assign node colors in the same order as nodes
