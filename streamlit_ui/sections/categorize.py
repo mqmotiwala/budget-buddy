@@ -24,8 +24,7 @@ def show_categorize():
 
         with st.expander("Apply filters", icon=":material/tune:"):
             # date filter
-            prompt_text = "Filter by transaction dates"
-            st.text(prompt_text)
+            css.markdown(css.underline("*Transaction Dates*", style="double"))
 
             min_date_in_master = master[c.DATE_COLUMN].min()
             max_date_in_master = master[c.DATE_COLUMN].max()
@@ -74,24 +73,73 @@ def show_categorize():
             )
             
             # issuer filter
-            filtered_issuers = h.create_multiselect_filter(prompt_text="Filter by statement issuer", options=st.session_state.user.EXISTING_ISSUERS, default=st.session_state.user.EXISTING_ISSUERS)
+            st.divider()
+            st.text("Filter by statement issuer")
+            filtered_issuers = st.multiselect(
+                label = "Filter by statement issuer",
+                options = st.session_state.user.EXISTING_ISSUERS,
+                default = st.session_state.user.EXISTING_ISSUERS,
+                placeholder = c.FILTER_PLACEHOLDER_TEXT,
+                label_visibility ='collapsed',
+            )
 
             # category filter            
             st.divider()
-            prompt_text = "Filter by category"
-            st.text(prompt_text)
+            st.text("Filter by category")
 
-            # if there are uncategorized expenses, filter only for them by default
-            show_uncategorized_only = st.toggle("Show uncategorized only", value=not(uncategorized.empty))
+            # identify outdated categories; dropna() is used to exclude None
+            outdated_categories = list(set(master[c.CATEGORY_COLUMN].dropna().unique()) - set(st.session_state.user.CATEGORIES))
+            categories_including_outdated = st.session_state.user.CATEGORIES + outdated_categories
 
-            # otherwise, let user decide which categories to review
-            filtered_categories = h.create_multiselect_filter(
-                prompt_text = "Filter by category", 
-                options = st.session_state.user.CATEGORIES, 
-                # if there are no more uncategorized transactions, except for those marked as "TBD", then default to showing those.
-                default = ["TBD"] if uncategorized.empty and not(TBD.empty) else None,
-                disabled = show_uncategorized_only,
-                include_aesthetics_boilerplate=False
+            UNCATEGORIZED_PILL_NAME = "Show Uncategorized Only"
+            OUTDATED_CATEGORIES_PILL_NAME = "Filter by Outdated Categories"
+
+            # Pill default priority order:
+            # 1. OUTDATED_CATEGORIES_PILL_NAME
+            # 2. UNCATEGORIZED_PILL_NAME 
+            # 3. None
+            default = OUTDATED_CATEGORIES_PILL_NAME if outdated_categories else UNCATEGORIZED_PILL_NAME if not(uncategorized.empty) else None
+            
+            # show quick filter pills, if applicable
+            options = []
+            category_pill = None
+            options += [UNCATEGORIZED_PILL_NAME] if not(uncategorized.empty) else [] 
+            options += [OUTDATED_CATEGORIES_PILL_NAME] if outdated_categories else []
+            if options:
+                category_pill = st.pills(
+                    options = options,
+                    default = default,
+                    label = "Filters", 
+                    label_visibility='collapsed'
+                )
+
+            if category_pill == UNCATEGORIZED_PILL_NAME:
+                # technically no options are required since the widget is disabled
+                # but Streamlit has a minor bug where the passed placeholder str is not used if len(options) == 0
+                options = st.session_state.user.CATEGORIES
+                default = None
+                disabled = True
+                placeholder = "Filtering for uncategorized expenses."
+
+            elif category_pill == OUTDATED_CATEGORIES_PILL_NAME:
+                options = outdated_categories
+                default = outdated_categories
+                disabled = False
+                placeholder = c.FILTER_PLACEHOLDER_TEXT
+
+            else:
+                options = st.session_state.user.CATEGORIES
+                default = ["TBD"] if not(TBD.empty) else None
+                disabled = False
+                placeholder = c.FILTER_PLACEHOLDER_TEXT
+
+            filtered_categories = st.multiselect(
+                options = options,
+                default = default,
+                placeholder = placeholder,
+                disabled = disabled,
+                label = "Filter by category",
+                label_visibility ='collapsed',
             )
 
             # notes filter
@@ -101,26 +149,51 @@ def show_categorize():
         description_filter = master[c.DESCRIPTION_COLUMN].str.contains(description_filter_setting, case=False, na=False) if description_filter_setting else True
         amount_filter = master[c.AMOUNT_COLUMN].between(min_amount, max_amount)
         issuer_filter = master[c.ISSUER_COLUMN].isin(filtered_issuers) if filtered_issuers else True
-        category_filter = master[c.CATEGORY_COLUMN].isna() if show_uncategorized_only else master[c.CATEGORY_COLUMN].isin(filtered_categories) if filtered_categories and len(filtered_categories) != len(st.session_state.user.CATEGORIES) else True
         notes_filter = master[c.NOTES_COLUMN].str.contains(notes_filter_setting, case=False, na=False) if notes_filter_setting else True
 
-        display_df = master[date_filter & description_filter & amount_filter & issuer_filter & category_filter & notes_filter]
+        # this logic controls category_filter for the st.data_editor() widget
+        if category_pill == UNCATEGORIZED_PILL_NAME:
+            # if user explicitly filters for UNCATEGORIZED_PILL_NAME, respond accordingly
+            category_filter = master[c.CATEGORY_COLUMN].isna()
+        else:
+            if filtered_categories:
+                # if the user provided filtered_categories,
+                # or, filter category section logic injected default values, then apply filters.
+                category_filter = master[c.CATEGORY_COLUMN].isin(filtered_categories)
+            else:
+                # this is the path where no category filters have been applied
+                # however, no selection == no filter
+                category_filter = True         
 
+        display_df = master[date_filter & description_filter & amount_filter & issuer_filter & category_filter & notes_filter]
+        
         if uncategorized.empty and TBD.empty:
             st.markdown("""
             :rainbow[Nice!] All expenses are categorized.  
             You can still edit existing categories below."""
         )
-
         else:
             st.markdown(f":rainbow[{len(uncategorized) + len(TBD)}/{len(master)}] expenses are uncategorized!")
+
+        if outdated_categories:
+            bullets = "\n".join(f"- {cat}" for cat in outdated_categories)
+            error_msg = """
+                Your data contains outdated categories that no longer exist in your categories model.  
+                This data will not be used for analytics, until either the expenses are re-categorized or your categories model is updated.  
+            """
+
+            error_msg = f"{error_msg}\n\nOutdated categories:\n{bullets}"
+            st.error(error_msg, icon="🚨")
+
 
         # category column config is handled separately
         # since it relies on user specific data
         c.column_configs[c.CATEGORY_COLUMN] = st.column_config.SelectboxColumn(
             label="Category",
             width="medium",
-            options=st.session_state.user.CATEGORIES
+            # include outdated options in SelectboxColumn 
+            # otherwise, Streamlit shows outdated category cells as empty
+            options=categories_including_outdated
         )
 
         edited = st.data_editor(

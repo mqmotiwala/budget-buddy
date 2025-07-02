@@ -103,6 +103,7 @@ GROUP_BY_COLUMN = "group_by"
 # st.data_editor settings
 EDITING_NOT_ALLOWED_TEXT = "Editing is not allowed here! It breaks deduplication logic. 🤭"
 SELECTION_PROMPT = "To get started, make a selection."
+OUTDATED_CATEGORY_LABEL_PREFIX = "OUTDATED CATEGORY:"
 
 # note: CATEGORY_COLUMN config is added right before st.data_editor() is invoked
 # this is because it relies on user specific data

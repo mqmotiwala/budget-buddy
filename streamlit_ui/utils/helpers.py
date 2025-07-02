@@ -113,20 +113,6 @@ def create_text_filter(prompt_text, add_divider=True):
         label_visibility = 'collapsed'
     ) 
 
-def create_multiselect_filter(prompt_text, options, default, disabled=False, include_aesthetics_boilerplate=True):
-    if include_aesthetics_boilerplate:
-        st.divider()
-        st.text(prompt_text)
-    
-    return st.multiselect(
-        label = prompt_text,
-        options = options,
-        default = default,
-        placeholder = c.FILTER_PLACEHOLDER_TEXT,
-        label_visibility ='collapsed',
-        disabled = disabled
-    )
-
 def get_time_range_dates(time_range):
     today = date.today()
 
