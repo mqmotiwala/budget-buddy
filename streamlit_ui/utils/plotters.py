@@ -106,7 +106,7 @@ def sankey(df):
         value.append(abs(delta))
 
     # colors
-    colors = {
+    colors_map = {
         # tuple elements are ordered in hierarchy of categories.json keys
         c.INCOME_PARENT_CATEGORY_KEY: ("#014400", "#158013"),
         c.SAVINGS_PARENT_CATEGORY_KEY: ("#72b772", "#bae7ba"),
@@ -118,18 +118,18 @@ def sankey(df):
     # assign node colors in the same order as nodes
     node_colors = []
     for cat in raw_nodes:
-        node_color = colors.get(cat, None)
+        node_color = colors_map.get(cat, None)
         if node_color:
             node_colors.append(node_color[0])
         else:
             if cat in st.session_state.user.INCOME_CATEGORIES:
-                node_colors.append(colors[c.INCOME_PARENT_CATEGORY_KEY][1])
+                node_colors.append(colors_map[c.INCOME_PARENT_CATEGORY_KEY][1])
             elif cat in st.session_state.user.SAVINGS_CATEGORIES:
-                node_colors.append(colors[c.SAVINGS_PARENT_CATEGORY_KEY][1])
+                node_colors.append(colors_map[c.SAVINGS_PARENT_CATEGORY_KEY][1])
             elif cat in st.session_state.user.EXPENSES_BUCKETS:
-                node_colors.append(colors[c.EXPENSES_PARENT_CATEGORY_KEY][1])
+                node_colors.append(colors_map[c.EXPENSES_PARENT_CATEGORY_KEY][1])
             elif cat in st.session_state.user.EXPENSES_CATEGORIES:
-                node_colors.append(colors[c.EXPENSES_PARENT_CATEGORY_KEY][2])
+                node_colors.append(colors_map[c.EXPENSES_PARENT_CATEGORY_KEY][2])
             else:
                 # non-expenses colors; these are not rendered 
                 # but to avoid index out of range errors, we still add to node_colors 
