@@ -107,24 +107,33 @@ def sankey(df):
 
     # colors
     colors = {
-        c.INCOME_PARENT_CATEGORY_KEY: "#014400",
-        c.SAVINGS_PARENT_CATEGORY_KEY: "#72b772",
-        c.EXPENSES_PARENT_CATEGORY_KEY: "#d62728",
-        UNDERSPENT_CUSTOM_NODE_NAME: "#17becf",
-        OVERSPENT_CUSTOM_NODE_NAME: "#ff7f0e"
+        # tuple elements are ordered in hierarchy of categories.json keys
+        c.INCOME_PARENT_CATEGORY_KEY: ("#014400", "#158013"),
+        c.SAVINGS_PARENT_CATEGORY_KEY: ("#72b772", "#bae7ba"),
+        c.EXPENSES_PARENT_CATEGORY_KEY: ("#d62728", "#f75d5d", "#ffcccc"),
+        UNDERSPENT_CUSTOM_NODE_NAME: ("#17becf", "#7fdbff"),
+        OVERSPENT_CUSTOM_NODE_NAME: ("#ff7f0e", "#ffbb78")
     }
 
     # assign node colors in the same order as nodes
-    # for general expense categories, a random red shade is assigned
-    red_variants = [
-        "#B71414",  # dark red
-        "#E51919",  # rich mid-dark red
-        "#EA4747",  # medium red
-        "#EF7575",  # soft mid-light red
-        "#F4A3A3",  # light red
-    ]
-
-    node_colors = [colors.get(cat, random.choice(red_variants)) for cat in raw_nodes]
+    node_colors = []
+    for cat in raw_nodes:
+        node_color = colors.get(cat, None)
+        if node_color:
+            node_colors.append(node_color[0])
+        else:
+            if cat in st.session_state.user.INCOME_CATEGORIES:
+                node_colors.append(colors[c.INCOME_PARENT_CATEGORY_KEY][1])
+            elif cat in st.session_state.user.SAVINGS_CATEGORIES:
+                node_colors.append(colors[c.SAVINGS_PARENT_CATEGORY_KEY][1])
+            elif cat in st.session_state.user.EXPENSES_BUCKETS:
+                node_colors.append(colors[c.EXPENSES_PARENT_CATEGORY_KEY][1])
+            elif cat in st.session_state.user.EXPENSES_CATEGORIES:
+                node_colors.append(colors[c.EXPENSES_PARENT_CATEGORY_KEY][2])
+            else:
+                # non-expenses colors; these are not rendered 
+                # but to avoid index out of range errors, we still add to node_colors 
+                node_colors.append("#000000")
 
     # color links by the target node
     link_colors = [hex_to_rgba(node_colors[t]) for t in target]
