@@ -29,11 +29,11 @@ def show_categorize():
             min_date_in_master = master[c.DATE_COLUMN].min()
             max_date_in_master = master[c.DATE_COLUMN].max()
             res = st.date_input(
-                label = "date_input",
-                label_visibility = "collapsed",
                 value = [min_date_in_master, max_date_in_master],
                 min_value = min_date_in_master, 
-                max_value = max_date_in_master
+                max_value = max_date_in_master,
+                label = "",
+                label_visibility = "collapsed",
             )
 
             # streamlit enforces at least one date selection
@@ -51,41 +51,48 @@ def show_categorize():
             max_date = pd.to_datetime(max_date)
 
             # description filter
-            description_filter_setting = h.create_text_filter(prompt_text="Filter by description")
+            st.divider()
+            css.markdown(css.underline("*Description*", style="double"))
+            description_filter_setting = st.text_input(
+                placeholder = c.FILTER_PLACEHOLDER_TEXT,
+                label_visibility = 'collapsed',
+                label = "", 
+            ) 
 
             # amount filter
             st.divider()
-            prompt_text = "Filter by transaction amount"
-            st.text(prompt_text)
+            css.markdown(css.underline("*Transaction Dates*", style="double"))
             min_amount_in_master = int(master[c.AMOUNT_COLUMN].min())
             max_amount_in_master = int(master[c.AMOUNT_COLUMN].max())
             range_step = 10
+
+            css.empty_space()
 
             # needed to ensure default values are rounded to the nearest range step
             # as they must be within the options, which are multiples of range_step
             mround = lambda x: range_step * round(x / range_step)
             min_amount, max_amount = st.select_slider(
-                label=prompt_text, 
                 options=range(min_amount_in_master, max_amount_in_master + range_step, range_step),
                 value=(mround(min_amount_in_master), mround(max_amount_in_master)),
                 format_func=lambda x: f"-${abs(x):,}" if x < 0 else f"${x:,}",
+                label="", 
                 label_visibility='collapsed'
             )
             
             # issuer filter
             st.divider()
-            st.text("Filter by statement issuer")
+            css.markdown(css.underline("*Statement Issuer*", style="double"))
             filtered_issuers = st.multiselect(
-                label = "Filter by statement issuer",
                 options = st.session_state.user.EXISTING_ISSUERS,
                 default = st.session_state.user.EXISTING_ISSUERS,
                 placeholder = c.FILTER_PLACEHOLDER_TEXT,
+                label = "",
                 label_visibility ='collapsed',
             )
 
             # category filter            
             st.divider()
-            st.text("Filter by category")
+            css.markdown(css.underline("*Category*", style="double"))
 
             # identify outdated categories; dropna() is used to exclude None
             outdated_categories = list(set(master[c.CATEGORY_COLUMN].dropna().unique()) - set(st.session_state.user.CATEGORIES))
@@ -109,7 +116,7 @@ def show_categorize():
                 category_pill = st.pills(
                     options = options,
                     default = default,
-                    label = "Filters", 
+                    label = "", 
                     label_visibility='collapsed'
                 )
 
@@ -138,12 +145,18 @@ def show_categorize():
                 default = default,
                 placeholder = placeholder,
                 disabled = disabled,
-                label = "Filter by category",
+                label = "",
                 label_visibility ='collapsed',
             )
 
             # notes filter
-            notes_filter_setting = h.create_text_filter("Filter by notes")
+            st.divider()
+            css.markdown(css.underline("*Notes*", style="double"))
+            notes_filter_setting = st.text_input(
+                placeholder = c.FILTER_PLACEHOLDER_TEXT,
+                label_visibility = 'collapsed',
+                label = "notes", 
+            ) 
 
         date_filter = master[c.DATE_COLUMN].between(min_date, max_date)
         description_filter = master[c.DESCRIPTION_COLUMN].str.contains(description_filter_setting, case=False, na=False) if description_filter_setting else True

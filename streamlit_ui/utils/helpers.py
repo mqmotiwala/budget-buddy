@@ -98,21 +98,6 @@ def get_step_status(execution_arn):
 
     return current_step, last_completed_step
 
-def create_text_filter(prompt_text, add_divider=True):
-    if prompt_text is None:
-        raise ValueError(MISSING_ARGUMENTS_NOTICE)
-    
-    # places a divider by default for aesthetics
-    if add_divider:
-        st.divider()
-
-    st.text(prompt_text)
-    return st.text_input(
-        label = prompt_text, 
-        placeholder = c.FILTER_PLACEHOLDER_TEXT,
-        label_visibility = 'collapsed'
-    ) 
-
 def get_time_range_dates(time_range):
     today = date.today()
 
