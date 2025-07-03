@@ -91,8 +91,8 @@ def sankey(df):
     # SAVINGS → SAVINGS_CATEGORIES
     for category in st.session_state.user.SAVINGS_CATEGORIES:
         if category != c.SAVINGS_PARENT_CATEGORY_KEY:
-            source.append(c.SAVINGS_PARENT_CATEGORY_KEY)
-            target.append(category)
+            source.append(node_indices[c.SAVINGS_PARENT_CATEGORY_KEY])
+            target.append(node_indices[category])
             value.append(totals.get(category, 0))
 
     # Delta flow
