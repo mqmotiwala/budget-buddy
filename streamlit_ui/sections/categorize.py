@@ -32,7 +32,7 @@ def show_categorize():
                 value = [min_date_in_master, max_date_in_master],
                 min_value = min_date_in_master, 
                 max_value = max_date_in_master,
-                label = "",
+                label = "Transaction Dates",
                 label_visibility = "collapsed",
             )
 
@@ -56,12 +56,12 @@ def show_categorize():
             description_filter_setting = st.text_input(
                 placeholder = c.FILTER_PLACEHOLDER_TEXT,
                 label_visibility = 'collapsed',
-                label = "", 
+                label = "Description", 
             ) 
 
             # amount filter
             st.divider()
-            css.markdown(css.underline("*Transaction Dates*", style="double"))
+            css.markdown(css.underline("*Amount*", style="double"))
             min_amount_in_master = int(master[c.AMOUNT_COLUMN].min())
             max_amount_in_master = int(master[c.AMOUNT_COLUMN].max())
             range_step = 10
@@ -75,7 +75,7 @@ def show_categorize():
                 options=range(min_amount_in_master, max_amount_in_master + range_step, range_step),
                 value=(mround(min_amount_in_master), mround(max_amount_in_master)),
                 format_func=lambda x: f"-${abs(x):,}" if x < 0 else f"${x:,}",
-                label="", 
+                label="Amount", 
                 label_visibility='collapsed'
             )
             
@@ -86,7 +86,7 @@ def show_categorize():
                 options = st.session_state.user.EXISTING_ISSUERS,
                 default = st.session_state.user.EXISTING_ISSUERS,
                 placeholder = c.FILTER_PLACEHOLDER_TEXT,
-                label = "",
+                label = "Statement Issuer",
                 label_visibility ='collapsed',
             )
 
@@ -116,7 +116,7 @@ def show_categorize():
                 category_pill = st.pills(
                     options = options,
                     default = default,
-                    label = "", 
+                    label = "Category", 
                     label_visibility='collapsed'
                 )
 
@@ -145,7 +145,7 @@ def show_categorize():
                 default = default,
                 placeholder = placeholder,
                 disabled = disabled,
-                label = "",
+                label = "Category",
                 label_visibility ='collapsed',
             )
 
