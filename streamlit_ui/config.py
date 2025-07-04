@@ -35,7 +35,11 @@ sf = boto3.client(
 )
 
 # free/premiun tier settings
+# note: premium override key in secrets.toml exists
+# consumed by h.is_user_premium()
 MAX_FREE_STATEMENT_UPLOADS = 3
+PREMIUM_SECRETS_HEADER = "premium"
+OVERRIDE_KEY = "override"
 
 # Google OAuth2Component instance
 CLIENT_ID = st.secrets["oauth"]["GOOGLE_CLIENT_ID"]

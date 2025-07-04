@@ -3,6 +3,7 @@ import config as c
 import streamlit as st
 import utils.auth as a
 import utils.css as css
+import utils.helpers as h 
 
 from sections.faqs import show_faqs 
 from sections.header import show_header 
@@ -36,7 +37,7 @@ else:
     css.set_app_wide_styling()
 
     show_header()
-    if not st.session_state.user.is_premium: 
+    if not h.user_is_premium(): 
         show_free_tier_notice()
 
     # TABS = st.tabs() container objects mapped by TAB_NAMES
