@@ -15,11 +15,6 @@ def show_upload():
 
     st.header("🗂️ Upload Statements")
     
-    if master is not None and not master.empty:
-        latest_dates = master.groupby(c.ISSUER_COLUMN)[c.DATE_COLUMN].max()
-        recommended_date = latest_dates.min().strftime("%A, %B %d, %Y")
-        st.markdown(f"To prevent data gaps, give me statements from :rainbow[{recommended_date}] or earlier!")
-
     if h.user_is_premium():
         # never impose upload limits on premium users
         disabled = False
