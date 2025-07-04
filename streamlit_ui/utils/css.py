@@ -28,6 +28,16 @@ def set_app_wide_styling():
     </style>
     """
 
+    # right align logout button
+    css += f"""
+    <style>
+        div.st-key-{c.LOGOUT_BUTTON_KEY_NAME} div.stButton {{
+            display: flex;            
+            justify-content: flex-end;
+        }}
+    </style>
+    """
+
     st.html(css)
 
 def highlight(text, background=c.BUDGET_BUDDY_COLOR, color="black", font_weight="normal", font_size="inherit", tilt=0):
