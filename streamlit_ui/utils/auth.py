@@ -74,6 +74,7 @@ def get_auth(unique_key=None):
 def logout():
     # effectively resets the session
     st.session_state.clear()
+    st.write("kik")
 
     # rerun the app to reflect the new state
     st.rerun()
