@@ -1,7 +1,10 @@
 name: Upload categories.json to S3
 
-# disabled workflow via on: []
-on: []
+# disabling workflow by forcing ignore on all branches
+on:
+  push:
+    branches-ignore:
+      - "*"
 
 jobs:
   upload-categories:
