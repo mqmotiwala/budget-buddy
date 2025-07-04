@@ -1,5 +1,6 @@
 import config as c
 import streamlit as st
+import utils.helpers as h
 
 def set_app_wide_styling():
     """
@@ -35,6 +36,15 @@ def set_app_wide_styling():
             display: flex;            
             justify-content: flex-end;
         }}
+    </style>
+    """
+
+    css += f"""
+    <style>
+      .is-badge {{
+        background-color: {h.hex_to_rgba(c.BUDGET_BUDDY_COLOR)};
+        color: #505050 !important;
+      }}
     </style>
     """
 
