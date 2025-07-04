@@ -8,6 +8,7 @@ def show_header():
     with cols[0]:
         st.title(f"👋 Hi {st.session_state.user.first_name}! I'm your Budget Buddy {c.BUDGET_BUDDY_ICON}")
     with cols[1]:
-        st.button("Logout", key=c.LOGOUT_BUTTON_KEY_NAME)
+        if st.button("Logout", key=c.LOGOUT_BUTTON_KEY_NAME):
+            a.logout()
         
     css.markdown(f"Let's get started — managing your finances just got {css.underline('simple and stress-free')}.")
