@@ -1,9 +1,7 @@
 name: Upload categories.json to S3
 
-on:
-  push:
-    branches:
-      - main
+# disabled workflow via on: []
+on: []
 
 jobs:
   upload-categories:

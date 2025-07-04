@@ -83,7 +83,7 @@ def show_customize_categories():
 
     # lock this feature behind premium tier
     disabled = not(st.session_state.user.is_premium)
-    disabled = False
+    disabled = False if st.secrets.get(c.TEST_TABLE, {}).get(c.EMULATE_PREMIUM, False) else not(st.session_state.user.is_premium)
     if disabled:
         st.error(f"Custom categories are not available on the free tier. Upgrade to premium!", icon="🚫")
         css.divider()
