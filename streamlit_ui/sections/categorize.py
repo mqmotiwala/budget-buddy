@@ -24,7 +24,7 @@ def show_categorize():
 
         with st.expander("Apply filters", icon=":material/tune:"):
             # date filter
-            css.markdown(css.underline("*Transaction Dates*", style="double"))
+            css.markdown(css.underline("*Transaction Dates*", thickness="1px"))
 
             min_date_in_master = master[c.DATE_COLUMN].min()
             max_date_in_master = master[c.DATE_COLUMN].max()
@@ -52,7 +52,7 @@ def show_categorize():
 
             # description filter
             st.divider()
-            css.markdown(css.underline("*Description*", style="double"))
+            css.markdown(css.underline("*Description*", thickness="1px"))
             description_filter_setting = st.text_input(
                 placeholder = c.FILTER_PLACEHOLDER_TEXT,
                 label_visibility = 'collapsed',
@@ -61,7 +61,7 @@ def show_categorize():
 
             # amount filter
             st.divider()
-            css.markdown(css.underline("*Amount*", style="double"))
+            css.markdown(css.underline("*Amount*", thickness="1px"))
             min_amount_in_master = int(master[c.AMOUNT_COLUMN].min())
             max_amount_in_master = int(master[c.AMOUNT_COLUMN].max())
             range_step = 10
@@ -81,7 +81,7 @@ def show_categorize():
             
             # issuer filter
             st.divider()
-            css.markdown(css.underline("*Statement Issuer*", style="double"))
+            css.markdown(css.underline("*Statement Issuer*", thickness="1px"))
             filtered_issuers = st.multiselect(
                 options = st.session_state.user.EXISTING_ISSUERS,
                 default = st.session_state.user.EXISTING_ISSUERS,
@@ -92,7 +92,7 @@ def show_categorize():
 
             # category filter            
             st.divider()
-            css.markdown(css.underline("*Category*", style="double"))
+            css.markdown(css.underline("*Category*", thickness="1px"))
 
             # identify outdated categories; dropna() is used to exclude None
             outdated_categories = list(set(master[c.CATEGORY_COLUMN].dropna().unique()) - set(st.session_state.user.CATEGORIES))
@@ -151,7 +151,7 @@ def show_categorize():
 
             # notes filter
             st.divider()
-            css.markdown(css.underline("*Notes*", style="double"))
+            css.markdown(css.underline("*Notes*", thickness="1px"))
             notes_filter_setting = st.text_input(
                 placeholder = c.FILTER_PLACEHOLDER_TEXT,
                 label_visibility = 'collapsed',
@@ -185,7 +185,6 @@ def show_categorize():
                 You're all caught up!
             """
             st.success(msg)
-
         else:
             st.markdown(f":rainbow[{len(uncategorized) + len(TBD)}/{len(master)}] expenses are uncategorized!")
 
