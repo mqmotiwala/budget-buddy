@@ -180,13 +180,24 @@ def show_categorize():
 
         display_df = master[date_filter & description_filter & amount_filter & issuer_filter & category_filter & notes_filter]
         
-        if uncategorized.empty and TBD.empty:
+        n1 = len(uncategorized)
+        n2 = len(TBD)
+        n3 = len(master[master[c.CATEGORY_COLUMN].isin(outdated_categories)])
+        if n1 or n2 or n3:
+            msg = f"""
+                {f"{n1} transaction{'s' if n1 > 1 else ''} need{'s' if n1 == 1 else ''} to be categorized.  " if n1 > 0 else ""}
+                {f"{n2} transaction{'s' if n2 > 1 else ''} marked for later.  " if n2 > 0 else ""}
+                {f"{n3} transaction{'s' if n3 > 1 else ''} with outdated categories.  " if n3 > 0 else ""}
+            """
+            
+            # removes empty lines
+            clean = "\n".join(line for line in msg.splitlines() if line.strip())
+            st.info(clean)
+        else:
             msg = """
-                You're all caught up!
+                You're all caught up! 🎉
             """
             st.success(msg)
-        else:
-            st.markdown(f":rainbow[{len(uncategorized) + len(TBD)}/{len(master)}] expenses are uncategorized!")
 
         if outdated_categories:
             bullets = "\n".join(f"- {cat}" for cat in outdated_categories)
