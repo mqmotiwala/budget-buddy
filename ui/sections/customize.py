@@ -3,7 +3,7 @@ import streamlit as st
 import utils.css as css
 import utils.helpers as h
 
-def show_customize_categories():
+def show_customize():
 
     # key names for editing_group items
     # used to define rendering attributes for the editing_group
