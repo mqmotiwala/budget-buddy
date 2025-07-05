@@ -13,7 +13,7 @@ from sections.features import show_features
 from sections.analytics import show_analytics
 from sections.categorize import show_categorize
 from sections.free_tier import show_free_tier_notice
-from sections.customize_categories import show_customize_categories
+from sections.customize import show_customize
 
 if "auth" not in st.session_state:
     st.set_page_config(**c.STREAMLIT_LANDING_PAGE_CONFIG)
@@ -48,4 +48,4 @@ else:
         show_analytics()
 
     with tabs[c.CUSTOMIZE_CATEGORIES_TAB_NAME]:
-        show_customize_categories()
+        show_customize()
