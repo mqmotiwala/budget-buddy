@@ -76,15 +76,13 @@ def show_customize_categories():
             options = group_values,
             default = group_values,
             accept_new_options = True,
-            disabled = disabled
+            disabled = not(h.user_is_premium())
         )
 
         return res
 
     # lock this feature behind premium tier
-    disabled = not(st.session_state.user.is_premium)
-    disabled = False
-    if disabled:
+    if not h.user_is_premium():
         st.error(f"Custom categories are not available on the free tier. Upgrade to premium!", icon="🚫")
         css.divider()
 
@@ -150,7 +148,7 @@ def show_customize_categories():
     # add non_expenses key
     categories[c.NON_EXPENSES_PARENT_CATEGORY_KEY] = c.NON_EXPENSES_CATEGORIES
     
-    if st.button("💾 Update Categories", disabled=disabled):
+    if st.button("💾 Update Categories", disabled=not(h.user_is_premium())):
         st.session_state.user.update_categories(categories)
         st.session_state.user.load_budgetbuddy_user_variables()
 

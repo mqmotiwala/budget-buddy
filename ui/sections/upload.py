@@ -15,21 +15,21 @@ def show_upload():
 
     st.header("🗂️ Upload Statements")
     
-    if master is not None and not master.empty:
-        latest_dates = master.groupby(c.ISSUER_COLUMN)[c.DATE_COLUMN].max()
-        recommended_date = latest_dates.min().strftime("%A, %B %d, %Y")
-        st.markdown(f"To prevent data gaps, give me statements from :rainbow[{recommended_date}] or earlier!")
-
-    if not st.session_state.user.is_premium:
+    if h.user_is_premium():
+        # never impose upload limits on premium users
+        disabled = False
+    else:
+        # show statement processing limit notice if free-tier
         num_uploads = getattr(st.session_state.user, 'num_uploads', 0)
         num_remaining_uploads = c.MAX_FREE_STATEMENT_UPLOADS - num_uploads
         
+        # evaluate if file uploading should be disabled
         if num_remaining_uploads <= 0:
-            disabled = True
             st.error(f"You can only process {c.MAX_FREE_STATEMENT_UPLOADS} statements on the free tier. Upgrade to premium!", icon="🚫")
+            disabled = True
         else:
             st.warning(f"You can process {num_remaining_uploads} more statements.")
-            disabled = False 
+            disabled = False
 
     file = st.file_uploader("Upload CSV File", type=["csv"], on_change=h.clear_issuer_selection, help=c.FILE_UPLOADER_HELP_TEXT, disabled=disabled)
     issuer = st.selectbox("Select Issuer", st.session_state.user.EXISTING_ISSUERS, index=None, key="issuer", disabled=disabled)

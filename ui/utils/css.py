@@ -1,5 +1,6 @@
 import config as c
 import streamlit as st
+import utils.helpers as h
 
 def set_app_wide_styling():
     """
@@ -25,6 +26,25 @@ def set_app_wide_styling():
         .element-container:has(iframe[height="0"]) {
             display: none;
         }
+    </style>
+    """
+
+    # right align logout button
+    css += f"""
+    <style>
+        div.st-key-{c.LOGOUT_BUTTON_KEY_NAME} div.stButton {{
+            display: flex;            
+            justify-content: flex-end;
+        }}
+    </style>
+    """
+
+    css += f"""
+    <style>
+      .is-badge {{
+        background-color: {h.hex_to_rgba(c.BUDGET_BUDDY_COLOR)};
+        color: #505050 !important;
+      }}
     </style>
     """
 

@@ -4,10 +4,11 @@ import utils.auth as a
 import utils.css as css
 
 def show_header():
-    _, col2 = st.columns([10, 1])
-    with col2:
-        if st.button("Logout"):
-            a.logout()       
-
-    st.title(f"👋 Hi {st.session_state.user.first_name}! I'm your Budget Buddy {c.BUDGET_BUDDY_ICON}")
+    cols = st.columns([0.9, 0.1])
+    with cols[0]:
+        st.title(f"👋 Hi {st.session_state.user.first_name}! I'm your Budget Buddy {c.BUDGET_BUDDY_ICON}")
+    with cols[1]:
+        if st.button("Logout", key=c.LOGOUT_BUTTON_KEY_NAME):
+            a.logout()
+        
     css.markdown(f"Let's get started — managing your finances just got {css.underline('simple and stress-free')}.")

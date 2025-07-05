@@ -62,8 +62,8 @@ def show_analytics():
             ~master[c.CATEGORY_COLUMN].isin(st.session_state.user.NON_EXPENSES_CATEGORIES)
         ].copy()
 
-        st.markdown(f"Analyzing :rainbow[{start.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)} - {end.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)}]")
-        
+        st.markdown(f":orange-badge[:material/date_range: {start.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)} - {end.strftime(c.PREFERRED_UI_DATE_FORMAT_STRFTIME)}]")
+
         if analyze.empty:
             st.write("There is no categorized data for me to analyze. 😔")
             return 

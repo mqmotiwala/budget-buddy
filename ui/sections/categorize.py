@@ -24,7 +24,7 @@ def show_categorize():
 
         with st.expander("Apply filters", icon=":material/tune:"):
             # date filter
-            css.markdown(css.underline("*Transaction Dates*", style="double"))
+            css.markdown(css.underline("*Transaction Dates*", thickness="1px"))
 
             min_date_in_master = master[c.DATE_COLUMN].min()
             max_date_in_master = master[c.DATE_COLUMN].max()
@@ -32,7 +32,7 @@ def show_categorize():
                 value = [min_date_in_master, max_date_in_master],
                 min_value = min_date_in_master, 
                 max_value = max_date_in_master,
-                label = "",
+                label = "Transaction Dates",
                 label_visibility = "collapsed",
             )
 
@@ -52,16 +52,16 @@ def show_categorize():
 
             # description filter
             st.divider()
-            css.markdown(css.underline("*Description*", style="double"))
+            css.markdown(css.underline("*Description*", thickness="1px"))
             description_filter_setting = st.text_input(
                 placeholder = c.FILTER_PLACEHOLDER_TEXT,
                 label_visibility = 'collapsed',
-                label = "", 
+                label = "Description", 
             ) 
 
             # amount filter
             st.divider()
-            css.markdown(css.underline("*Transaction Dates*", style="double"))
+            css.markdown(css.underline("*Amount*", thickness="1px"))
             min_amount_in_master = int(master[c.AMOUNT_COLUMN].min())
             max_amount_in_master = int(master[c.AMOUNT_COLUMN].max())
             range_step = 10
@@ -75,24 +75,24 @@ def show_categorize():
                 options=range(min_amount_in_master, max_amount_in_master + range_step, range_step),
                 value=(mround(min_amount_in_master), mround(max_amount_in_master)),
                 format_func=lambda x: f"-${abs(x):,}" if x < 0 else f"${x:,}",
-                label="", 
+                label="Amount", 
                 label_visibility='collapsed'
             )
             
             # issuer filter
             st.divider()
-            css.markdown(css.underline("*Statement Issuer*", style="double"))
+            css.markdown(css.underline("*Statement Issuer*", thickness="1px"))
             filtered_issuers = st.multiselect(
                 options = st.session_state.user.EXISTING_ISSUERS,
                 default = st.session_state.user.EXISTING_ISSUERS,
                 placeholder = c.FILTER_PLACEHOLDER_TEXT,
-                label = "",
+                label = "Statement Issuer",
                 label_visibility ='collapsed',
             )
 
             # category filter            
             st.divider()
-            css.markdown(css.underline("*Category*", style="double"))
+            css.markdown(css.underline("*Category*", thickness="1px"))
 
             # identify outdated categories; dropna() is used to exclude None
             outdated_categories = list(set(master[c.CATEGORY_COLUMN].dropna().unique()) - set(st.session_state.user.CATEGORIES))
@@ -116,7 +116,7 @@ def show_categorize():
                 category_pill = st.pills(
                     options = options,
                     default = default,
-                    label = "", 
+                    label = "Category", 
                     label_visibility='collapsed'
                 )
 
@@ -145,13 +145,13 @@ def show_categorize():
                 default = default,
                 placeholder = placeholder,
                 disabled = disabled,
-                label = "",
+                label = "Category",
                 label_visibility ='collapsed',
             )
 
             # notes filter
             st.divider()
-            css.markdown(css.underline("*Notes*", style="double"))
+            css.markdown(css.underline("*Notes*", thickness="1px"))
             notes_filter_setting = st.text_input(
                 placeholder = c.FILTER_PLACEHOLDER_TEXT,
                 label_visibility = 'collapsed',
@@ -180,14 +180,24 @@ def show_categorize():
 
         display_df = master[date_filter & description_filter & amount_filter & issuer_filter & category_filter & notes_filter]
         
-        if uncategorized.empty and TBD.empty:
+        n1 = len(uncategorized)
+        n2 = len(TBD)
+        n3 = len(master[master[c.CATEGORY_COLUMN].isin(outdated_categories)])
+        if n1 or n2 or n3:
+            msg = f"""
+                {f"{n1} transaction{'s' if n1 > 1 else ''} need{'s' if n1 == 1 else ''} to be categorized.  " if n1 > 0 else ""}
+                {f"{n2} transaction{'s' if n2 > 1 else ''} marked for later.  " if n2 > 0 else ""}
+                {f"{n3} transaction{'s' if n3 > 1 else ''} with outdated categories.  " if n3 > 0 else ""}
+            """
+            
+            # removes empty lines
+            clean = "\n".join(line for line in msg.splitlines() if line.strip())
+            st.info(clean)
+        else:
             msg = """
-                You're all caught up!
+                You're all caught up! 🎉
             """
             st.success(msg)
-
-        else:
-            st.markdown(f":rainbow[{len(uncategorized) + len(TBD)}/{len(master)}] expenses are uncategorized!")
 
         if outdated_categories:
             bullets = "\n".join(f"- {cat}" for cat in outdated_categories)

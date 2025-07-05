@@ -35,7 +35,11 @@ sf = boto3.client(
 )
 
 # free/premiun tier settings
-MAX_FREE_STATEMENT_UPLOADS = 10
+# note: premium override key in secrets.toml exists
+# consumed by h.is_user_premium()
+MAX_FREE_STATEMENT_UPLOADS = 3
+PREMIUM_SECRETS_HEADER = "premium"
+OVERRIDE_KEY = "override"
 
 # Google OAuth2Component instance
 CLIENT_ID = st.secrets["oauth"]["GOOGLE_CLIENT_ID"]
@@ -58,6 +62,7 @@ PREFERRED_UI_DATE_FORMAT_STRFTIME = "%A, %B %d, %Y"
 FILTER_PLACEHOLDER_TEXT = "No filter is applied when there is no input."
 FILE_UPLOADER_HELP_TEXT = "Statements uploaded remain encrypted at all times."
 ASSETS_PATH = "streamlit_ui/assets"
+LOGOUT_BUTTON_KEY_NAME = "logout_button"
 
 # tab settings
 GET_PREMIUM_TAB_NAME = "Get Premium"

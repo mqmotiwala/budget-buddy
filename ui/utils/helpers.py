@@ -254,3 +254,11 @@ def switch_to_tab(tab_name):
 def save_toast():
     st.toast('Saved changes to cloud!', icon="✨")
     time.sleep(1)
+
+def user_is_premium():
+    """
+        returns user's premium status
+        can be overridden to either premium or free-tier via a premium_override value in secrets.toml 
+    """
+    premium_override = st.secrets.get(c.PREMIUM_SECRETS_HEADER, {}).get(c.OVERRIDE_KEY, None)
+    return premium_override if premium_override is not None else st.session_state.user.is_premium
