@@ -262,3 +262,21 @@ def user_is_premium():
     """
     premium_override = st.secrets.get(c.PREMIUM_SECRETS_HEADER, {}).get(c.OVERRIDE_KEY, None)
     return premium_override if premium_override is not None else st.session_state.user.is_premium
+
+def animate_typing(text, container=None, delay=c.TYPING_ANIMATION_DELAY):
+    """
+    Animates typing effect for a given text in Streamlit.
+
+    Args:
+        text (str): The text to animate.
+        container (streamlit.container, optional): Streamlit container to display the text.
+        delay (float): Delay between each character in seconds.
+    """
+
+    if container is None:
+        container = st.empty()
+        
+    with container:
+        for i in range(len(text)):
+            st.write(text[0:i])
+            time.sleep(delay)

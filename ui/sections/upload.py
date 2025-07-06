@@ -44,7 +44,7 @@ def show_upload():
             with st.status("Uploading to cloud...", expanded=True) as status:
                 try:
                     c.s3.upload_fileobj(file, c.S3_BUCKET, new_statement_key)
-                    status.write("🟢 Uploaded to cloud ☁️")
+                    st.write("🟢 Uploaded to cloud ☁️")
                 except Exception as e:
                     status.update(label="Upload failed", state="error")
                     st.error(f"🔴 Upload failed: {e}")
@@ -71,23 +71,23 @@ def show_upload():
                     if unused_msgs:
                         msg = random.choice(unused_msgs)
                         used_msgs.add(msg)
-                        status.write(msg)
+                        h.animate_typing(msg)
                     else:
                         # all messages used, allow reuse
                         used_msgs.clear()
 
                     if completed != completed_reference:
                         completed_reference = completed
-                        status.write(c.LAMBDAS.get(completed)["success"])
+                        st.write(c.LAMBDAS.get(completed)["success"])
                       
                     time.sleep(0.5)
 
                 # One last check to emit final completed step's success message
                 current, completed = h.get_step_status(execution_arn)
                 if completed != completed_reference:
-                    status.write(c.LAMBDAS.get(completed)["success"])
+                    st.write(c.LAMBDAS.get(completed)["success"])
 
-                status.update(label="done!", state="complete", expanded=False)
+                st.update(label="done!", state="complete", expanded=False)
 
                 # increment num_uploads counter
                 st.session_state.user.update_num_uploads()

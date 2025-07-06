@@ -61,8 +61,9 @@ PREFERRED_UI_DATE_FORMAT_MOMENTJS = "dddd, MMMM DD, YYYY"
 PREFERRED_UI_DATE_FORMAT_STRFTIME = "%A, %B %d, %Y"
 FILTER_PLACEHOLDER_TEXT = "No filter is applied when there is no input."
 FILE_UPLOADER_HELP_TEXT = "Statements uploaded remain encrypted at all times."
-ASSETS_PATH = "streamlit_ui/assets"
+ASSETS_PATH = "ui/assets"
 LOGOUT_BUTTON_KEY_NAME = "logout_button"
+TYPING_ANIMATION_DELAY = 0.001  # seconds
 
 # tab settings
 GET_PREMIUM_TAB_NAME = "Get Premium"
@@ -168,7 +169,7 @@ LAMBDAS = {
             "🟠 Giving the CSV a good look...",
             "🟠 Decoding your transactions, line by line...",
             "🟠 Matching CSV format to our secret sauce...",
-            "🟠 Parsing with care — no charge left behind!",
+            "🟠 Parsing with care — no transaction left behind!",
             "🟠 Sorting the signal from the noise...",
             "🟠 Zipping everything into place — almost there!"
         ],
