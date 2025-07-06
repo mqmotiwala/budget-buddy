@@ -18,12 +18,21 @@ def show_faqs():
             st.write(answer)
 
         with st.expander("Is my data secure?"):
-            answer = """
-                Yes. Budget Buddy is GDPR compliant.  
-                Your private data is encrypted at all times, and decryption only happens client-side.
-                In laymen's terms, **only you** can see your data, no one else.
+            answer = f"""
+                Yes, we take security extremely seriously.  
 
-                Additionally, you are always in control of your data and can request a full deletion at any time from the app. 
+                Budget Buddy is GDPR compliant and uses bank-level 256-bit encryption for your data.
+                So, only you can see your data, {css.underline("no one else")}.
+            """
+            css.markdown(answer)
+
+        with st.expander("What data is collected?"):
+            answer = """
+                Budget Buddy does not collect any personal information or metadata about you.
+                We only collect the data you upload, which is processed to generate insights and reports on your finances.
+                
+                In addition, you retain full ownership and control.  
+                If you ever decide to remove your data, simply submit a deletion request within the app. 
             """
             st.write(answer)
             
