@@ -87,7 +87,7 @@ def show_upload():
                 if completed != completed_reference:
                     st.write(c.LAMBDAS.get(completed)["success"])
 
-                st.update(label="done!", state="complete", expanded=False)
+                status.update(label="done!", state="complete", expanded=False)
 
                 # increment num_uploads counter
                 st.session_state.user.update_num_uploads()
