@@ -62,9 +62,9 @@ def show_categorize():
             # amount filter
             st.divider()
             css.markdown(css.underline("*Amount*", thickness="1px"))
-            min_amount_in_master = int(master[c.AMOUNT_COLUMN].min())
-            max_amount_in_master = int(master[c.AMOUNT_COLUMN].max())
             range_step = 10
+            min_amount_in_master = int(master[c.AMOUNT_COLUMN].min() - range_step)
+            max_amount_in_master = int(master[c.AMOUNT_COLUMN].max() + range_step)
 
             css.empty_space()
 
@@ -224,6 +224,8 @@ def show_categorize():
             width="medium",
             options=master[c.ISSUER_COLUMN].unique().tolist(),
         )
+
+        display_df = master[date_filter & description_filter & amount_filter & issuer_filter & category_filter & notes_filter]
 
         edited = st.data_editor(
             display_df,
