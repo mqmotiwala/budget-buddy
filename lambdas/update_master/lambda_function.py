@@ -26,20 +26,20 @@ def lambda_handler(event, context):
     logger.info("Lambda triggered with event:")
     logger.info(json.dumps(event))
 
-    body = json.loads(event["body"]) if isinstance(event["body"], str) else event["body"]
-    key = unquote_plus(body["parsed_statement_key"])
-
-    logger.info(f"Processing file from bucket: {BUCKET}, key: {key}")
-
-    # extract details from key path
-    # expected format: <user>/cleaned/file.csv
-    parts = key.split("/")
-    user = parts[0]
-
-    MASTER_KEY = f'{user}/categorized_expenses.parquet'
-    BACKUP_FOLDER = f'{user}/backups'
-
     try:
+        body = json.loads(event["body"]) if isinstance(event["body"], str) else event["body"]
+        key = unquote_plus(body["parsed_statement_key"])
+
+        logger.info(f"Processing file from bucket: {BUCKET}, key: {key}")
+
+        # extract details from key path
+        # expected format: <user>/cleaned/file.csv
+        parts = key.split("/")
+        user = parts[0]
+
+        MASTER_KEY = f'{user}/categorized_expenses.parquet'
+        BACKUP_FOLDER = f'{user}/backups'
+
         obj = s3.get_object(Bucket=BUCKET, Key=key)
         new_data = pd.read_csv(
             obj['Body'],
