@@ -18,7 +18,7 @@ logger.setLevel(logging.INFO)
 s3 = boto3.client('s3')
 
 BUCKET = 'aws-budget-buddy'
-ISSUERS = 'src/issuers.json'
+ISSUERS_KEY = 'src/issuers.json'
 
 def lambda_handler(event, context):
     logger.info(f"Lambda triggered with event: ")
@@ -29,7 +29,7 @@ def lambda_handler(event, context):
 
     # read ISSUERS from s3 
     try:
-        config_obj = s3.get_object(Bucket=BUCKET, Key=ISSUERS)
+        config_obj = s3.get_object(Bucket=BUCKET, Key=ISSUERS_KEY)
         config_data = config_obj['Body'].read().decode('utf-8')
         ISSUERS = json.loads(config_data)
 

@@ -28,7 +28,7 @@ def lambda_handler(event, context):
 
     try:
         body = json.loads(event["body"]) if isinstance(event["body"], str) else event["body"]
-        key = unquote_plus(body["parsed_statement_key"])
+        key = unquote_plus(body.get("parsed_statement_key", "KEY_NOT_FOUND_IN_EVENT_BODY"))
 
         logger.info(f"Processing file from bucket: {BUCKET}, key: {key}")
 
