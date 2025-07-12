@@ -1,10 +1,10 @@
-name: Upload categories.json to S3
+name: Upload issuers.json to S3
 
-# disabling workflow by forcing ignore on all branches
 on:
   push:
-    branches-ignore:
-      - "*"
+    branches: [main]
+    paths:
+      - 'issuers.json'
 
 jobs:
   upload-categories:
@@ -14,9 +14,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Upload categories.json to root of S3
+      - name: Upload issuers.json to S3
         run: |
-          aws s3 cp categories.json s3://${{ secrets.S3_BUCKET_NAME }}/mqmotiwala@gmail.com/categories.json
+          aws s3 cp issuers.json s3://${{ secrets.S3_BUCKET_NAME }}/src/issuers.json
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

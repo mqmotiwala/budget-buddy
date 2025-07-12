@@ -1,0 +1,43 @@
+{
+    "Amazon Visa": {
+        "DATE_COLUMN": "Transaction Date",
+        "DESCRIPTION_COLUMN": "Description",
+        "AMOUNT_COLUMN": "Amount",
+        "EXPENSES_SIGN": 1
+    },
+
+    "American Express Gold": {
+        "DATE_COLUMN": "Date",
+        "DESCRIPTION_COLUMN": "Description",
+        "AMOUNT_COLUMN": "Amount",
+        "EXPENSES_SIGN": -1
+    },
+
+    "American Express Platinum": {
+        "DATE_COLUMN": "Date",
+        "DESCRIPTION_COLUMN": "Description",
+        "AMOUNT_COLUMN": "Amount",
+        "EXPENSES_SIGN": -1
+    },
+
+    "Chase Freedom Unlimited": {
+        "DATE_COLUMN": "Transaction Date",
+        "DESCRIPTION_COLUMN": "Description",
+        "AMOUNT_COLUMN": "Amount",
+        "EXPENSES_SIGN": 1
+    },
+
+    "Chase Debit": {
+        "DATE_COLUMN": "Posting Date",
+        "DESCRIPTION_COLUMN": "Description",
+        "AMOUNT_COLUMN": "Amount",
+        "EXPENSES_SIGN": 1
+    },
+
+    "RBC Bank Visa Signature": {
+        "DATE_COLUMN": "Transaction Date",
+        "DESCRIPTION_COLUMN": "Description",
+        "AMOUNT_COLUMN": "Amount",
+        "EXPENSES_SIGN": 1
+    }
+}
