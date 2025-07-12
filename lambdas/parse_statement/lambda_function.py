@@ -9,7 +9,6 @@ import logging
 import traceback
 import pandas as pd
 
-from config import ISSUER_CONFIG
 from parser import parse
 from urllib.parse import unquote_plus
 
@@ -19,6 +18,7 @@ logger.setLevel(logging.INFO)
 s3 = boto3.client('s3')
 
 BUCKET = 'aws-budget-buddy'
+ISSUERS = 'src/issuers.json'
 
 def lambda_handler(event, context):
     logger.info(f"Lambda triggered with event: ")
@@ -27,6 +27,21 @@ def lambda_handler(event, context):
     key = unquote_plus(event.get('key'))
     logger.info(f"Processing file from bucket: {BUCKET}, key: {key}")
 
+    # read ISSUERS from s3 
+    try:
+        config_obj = s3.get_object(Bucket=BUCKET, Key=ISSUERS)
+        config_data = config_obj['Body'].read().decode('utf-8')
+        ISSUERS = json.loads(config_data)
+
+        logger.info(f"Loaded issuers from configuration.")
+        logger.info(json.dumps(ISSUERS, indent=4))
+    except Exception as e:
+        logger.error(f"Failed to load issuer configuration: {e}")
+        return {
+            "statusCode": 500,
+            "body": json.dumps({"error": "Failed to load issuer configuration"})
+        }
+
     try:
         # extract details from key path
         # expected format: <user>/statements/<issuer>/file.csv
@@ -34,7 +49,7 @@ def lambda_handler(event, context):
         user = parts[0]
         issuer = parts[2]
 
-        if not ISSUER_CONFIG.get(issuer):
+        if not ISSUERS.get(issuer):
             return {
                 "statusCode": 422,
                 "body": json.dumps({
@@ -47,7 +62,7 @@ def lambda_handler(event, context):
 
         logger.info(f"Read {len(raw)} rows from raw CSV")
 
-        clean = parse(raw, ISSUER_CONFIG[issuer])
+        clean = parse(raw, ISSUERS[issuer])
         clean["statement_issuer"] = issuer.lower()
 
         output_key = None

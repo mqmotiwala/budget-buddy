@@ -5,9 +5,12 @@ Required keys for each issuer include:
     - DESCRIPTION_COLUMN
     - AMOUNT_COLUMN
     - EXPENSES_SIGN: a multiplier to apply to amounts to convert expenses to negative values (if needed).
+
+
+NOTE: This file is deprecated as of 2025-07-11 as issuers management has moved to src/issuers.json in S3
 """
 
-ISSUER_CONFIG = {
+ISSUERS = {
     "amazon": {
         "DATE_COLUMN": "Transaction Date",
         "DESCRIPTION_COLUMN": "Description",
