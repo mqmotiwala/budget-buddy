@@ -32,7 +32,22 @@ def show_upload():
             disabled = False
 
     file = st.file_uploader("Upload CSV File", type=["csv"], on_change=h.clear_issuer_selection, help=c.FILE_UPLOADER_HELP_TEXT, disabled=disabled)
-    issuer = st.selectbox("Select Issuer", st.session_state.user.EXISTING_ISSUERS, index=None, key="issuer", disabled=disabled)
+    
+    issuer_disabled = disabled or not file
+    issuer_placeholder = "Upload a statement first." if file is None else "Select the issuer for this statement; or add a new one."
+    issuer = st.selectbox(
+        "Select Issuer",
+        c.KNOWN_ISSUERS, 
+        index=None, 
+        key="issuer", 
+        disabled=issuer_disabled, 
+        accept_new_options=True, 
+        placeholder=issuer_placeholder
+    )
+
+    if issuer is not None and issuer not in c.KNOWN_ISSUERS:
+        # logic to follow
+        st.write("🆕 New Issuer")
 
     if file and issuer:
         if st.button("📤 Upload Statement"):

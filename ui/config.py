@@ -2,6 +2,7 @@
 contains all config settings that are general across all users
 '''
 
+import json
 import boto3
 import streamlit as st
 
@@ -33,6 +34,16 @@ sf = boto3.client(
     aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
     region_name=AWS_REGION
 )
+
+# ISSUERS
+ISSUERS_KEY = 'src/issuers.json'
+try:
+    config_obj = s3.get_object(Bucket=S3_BUCKET, Key=ISSUERS_KEY)
+    config_data = config_obj['Body'].read().decode('utf-8')
+    ISSUERS = json.loads(config_data)
+except Exception as e:
+    ISSUERS = {}
+KNOWN_ISSUERS = list(ISSUERS.keys())
 
 # free/premiun tier settings
 # note: premium override key in secrets.toml exists
@@ -111,7 +122,7 @@ EDITING_NOT_ALLOWED_TEXT = "Editing is not allowed here! It breaks deduplication
 SELECTION_PROMPT = "To get started, make a selection."
 OUTDATED_CATEGORY_LABEL_PREFIX = "OUTDATED CATEGORY:"
 
-# note: CATEGORY_COLUMN config is added right before st.data_editor() is invoked
+# note: CATEGORY_COLUMN and ISSUER_COLUMN config is added right before st.data_editor() is invoked
 # this is because it relies on user specific data
 column_configs = {
     TRANSACTION_ID_COLUMN: None,
@@ -134,12 +145,6 @@ column_configs = {
     AMOUNT_COLUMN: st.column_config.NumberColumn(
         label="Amount",
         format="dollar",
-        width="medium"
-    ),
-
-    ISSUER_COLUMN: st.column_config.TextColumn(
-        label="Statement Issuer",
-        disabled=True, 
         width="medium"
     ),
 

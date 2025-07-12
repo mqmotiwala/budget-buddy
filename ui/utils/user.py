@@ -158,15 +158,6 @@ class User:
         self.EXPENSES_BODY = self.CATEGORIES_BODY.get(c.EXPENSES_PARENT_CATEGORY_KEY, {})
         self.EXPENSES_BUCKETS = self.EXPENSES_BODY.keys()
 
-        # existing issuers
-        response = c.s3.list_objects_v2(Bucket=c.S3_BUCKET, Prefix=f"{self.STATEMENTS_FOLDER}/", Delimiter="/")
-
-        # CommonPrefixes structure looks like: 
-        # [{"Prefix":"mqmotiwala@gmail.com/statements/amazon/"}], so
-        # .split('/')[-1] is an empty string
-        # .split('/')[-2] is the statement issuer
-        self.EXISTING_ISSUERS = [prefix["Prefix"].split("/")[-2] for prefix in response.get("CommonPrefixes", [])]
-
     def load_master(self):
         master = None
 

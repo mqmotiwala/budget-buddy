@@ -63,7 +63,7 @@ def lambda_handler(event, context):
         logger.info(f"Read {len(raw)} rows from raw CSV")
 
         clean = parse(raw, ISSUERS[issuer])
-        clean["statement_issuer"] = issuer.lower()
+        clean["statement_issuer"] = issuer
 
         output_key = None
         if not clean.empty:

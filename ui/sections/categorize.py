@@ -83,8 +83,7 @@ def show_categorize():
             st.divider()
             css.markdown(css.underline("*Statement Issuer*", thickness="1px"))
             filtered_issuers = st.multiselect(
-                options = st.session_state.user.EXISTING_ISSUERS,
-                default = st.session_state.user.EXISTING_ISSUERS,
+                options = c.KNOWN_ISSUERS,
                 placeholder = c.FILTER_PLACEHOLDER_TEXT,
                 label = "Statement Issuer",
                 label_visibility ='collapsed',
@@ -210,14 +209,20 @@ def show_categorize():
             st.error(error_msg, icon="🚨")
 
 
-        # category column config is handled separately
-        # since it relies on user specific data
+        # category column & issuer column configs are handled separately
+        # since they rely on user specific data
         c.column_configs[c.CATEGORY_COLUMN] = st.column_config.SelectboxColumn(
             label="Category",
             width="medium",
             # include outdated options in SelectboxColumn 
             # otherwise, Streamlit shows outdated category cells as empty
             options=categories_including_outdated
+        )
+
+        c.column_configs[c.ISSUER_COLUMN] = st.column_config.SelectboxColumn(
+            label="Statement Issuer",
+            width="medium",
+            options=master[c.ISSUER_COLUMN].unique().tolist(),
         )
 
         edited = st.data_editor(
